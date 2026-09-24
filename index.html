@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6fa">
+  <title>Rota de Entregas</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="container">
+    <header class="cabecalho">
+      <div>
+        <p class="marca">ROTA DE ENTREGAS</p>
+        <h1>Rota do dia</h1>
+        <p id="dataHoje" class="texto-suave"></p>
+      </div>
+      <div class="icone" aria-hidden="true">📦</div>
+    </header>
+
+    <section class="resumo" aria-label="Resumo da rota">
+      <article class="resumo-item">
+        <span>Entregas</span>
+        <strong id="totalEntregas">0</strong>
+      </article>
+      <article class="resumo-item">
+        <span>Pendentes</span>
+        <strong id="totalPendentes">0</strong>
+      </article>
+      <article class="resumo-item">
+        <span>Concluídas</span>
+        <strong id="totalConcluidas">0</strong>
+      </article>
+    </section>
+
+    <section class="painel">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Adicionar entrega</h2>
+          <p class="texto-suave">As entregas entram na rota na ordem cadastrada.</p>
+        </div>
+      </div>
+
+      <form id="formEntrega">
+        <input type="hidden" id="entregaId">
+
+        <div class="form-grid">
+          <label>
+            Cliente
+            <input id="cliente" required maxlength="80"
+                   placeholder="Nome do cliente">
+          </label>
+
+          <label>
+            Telefone <span class="opcional">(opcional)</span>
+            <input id="telefone" type="tel" maxlength="25"
+                   placeholder="(83) 99999-9999">
+          </label>
+
+          <label class="campo-largo">
+            Rua ou avenida
+            <input id="rua" required maxlength="120"
+                   placeholder="Nome da rua">
+          </label>
+
+          <label>
+            Número
+            <input id="numero" required maxlength="20"
+                   placeholder="Ex.: 123">
+          </label>
+
+          <label>
+            Bairro
+            <input id="bairro" required maxlength="80"
+                   placeholder="Nome do bairro">
+          </label>
+
+          <label class="campo-largo">
+            Cidade / UF
+            <input id="cidadeUf" required maxlength="80"
+                   placeholder="Ex.: João Pessoa - PB">
+          </label>
+
+          <label class="campo-largo">
+            Observação <span class="opcional">(opcional)</span>
+            <textarea id="observacao" rows="2" maxlength="250"
+                      placeholder="Ex.: tocar campainha, entregar após as 14h"></textarea>
+          </label>
+        </div>
+
+        <div class="botoes-formulario">
+          <button class="botao botao-primario" type="submit" id="botaoSalvar">
+            Adicionar à rota
+          </button>
+          <button class="botao botao-neutro escondido" type="button" id="botaoCancelar">
+            Cancelar edição
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="secao-rota">
+      <div class="cabecalho-secao">
+        <div>
+          <h2>Próximas entregas</h2>
+          <p id="textoProgresso" class="texto-suave">Adicione entregas para começar.</p>
+        </div>
+      </div>
+
+      <div id="listaPendentes" class="lista"></div>
+    </section>
+
+    <details class="concluidas">
+      <summary>
+        <span>Entregas concluídas</span>
+        <span class="contador-concluidas" id="contadorConcluidas">0</span>
+      </summary>
+      <div id="listaConcluidas" class="lista lista-concluidas"></div>
+    </details>
+
+    <footer>
+      Os dados ficam salvos neste navegador. Se limpar os dados do navegador,
+      os pedidos poderão ser apagados.
+    </footer>
+  </main>
+</body>
+</html>
