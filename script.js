@@ -1,7 +1,7 @@
 // ==========================================
 // CONFIGURAÇÃO DO SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hzgrulwdktmknxggsum.supabase.co";
+const SUPABASE_URL = "https://hzgrulwdktmkgnxggsum.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
 
 // Inicialização segura garantindo o carregamento correto via CDN global
