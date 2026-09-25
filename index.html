@@ -2,170 +2,173 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f6fa">
-  <meta name="description" content="Aplicação web responsiva para organizar rotas e acompanhar entregas diárias.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rota de Entregas</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Biblioteca do Supabase via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="script.js" defer></script>
+  <style>
+    /* Estilo para as Notificações Toast */
+    #toastContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: #2d3748;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      font-size: 14px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .toast.sucesso { background: #2f855a; }
+    .toast.erro { background: #c53030; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- TELA DE LOGIN (Exibida por padrão quando deslogado) -->
-  <div id="authContainer" class="container auth-wrapper" style="max-width: 400px; margin-top: 10vh;">
-    <header class="cabecalho" style="justify-content: center; text-align: center; margin-bottom: 20px;">
-      <div>
-        <p class="marca">ACESSO AO SISTEMA</p>
-        <h1>Login de Rotas</h1>
+  <!-- Container de Notificações Toast -->
+  <div id="toastContainer"></div>
+
+  <!-- TELA DE LOGIN -->
+  <div id="authContainer" class="auth-container" style="max-width: 400px; margin: 80px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+    <h2>Login do Entregador</h2>
+    <form id="formLogin">
+      <div style="margin-bottom: 15px;">
+        <label for="loginNome" style="display: block; margin-bottom: 5px;">Nome de Utilizador:</label>
+        <input type="text" id="loginNome" required style="width: 100%; padding: 8px; box-sizing: border-box;">
       </div>
-    </header>
-
-    <section class="painel">
-      <form id="formLogin">
-        <div class="form-grid" style="grid-template-columns: 1fr;">
-          <label>
-            Nome de usuário
-            <input id="loginNome" type="text" required placeholder="Ex.: motorista1">
-          </label>
-
-          <label>
-            Senha
-            <input id="loginSenha" type="password" required placeholder="Sua senha">
-          </label>
-        </div>
-
-        <div class="botoes-formulario" style="margin-top: 20px;">
-          <button class="botao botao-primario" type="submit" style="width: 100%;">Entrar</button>
-        </div>
-        
-        <p id="msgErroLogin" style="color: #d9534f; margin-top: 15px; text-align: center; display: none;"></p>
-      </form>
-    </section>
+      <div style="margin-bottom: 15px;">
+        <label for="loginSenha" style="display: block; margin-bottom: 5px;">Senha:</label>
+        <input type="password" id="loginSenha" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+      </div>
+      <button type="submit" style="width: 100%; padding: 10px; background: #2b6cb0; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Entrar</button>
+      <p id="msgErroLogin" style="color: red; margin-top: 10px; display: none;"></p>
+    </form>
   </div>
 
-  <!-- APLICAÇÃO PRINCIPAL (Oculta até o usuário fazer login) -->
-  <main class="container" id="appContainer" style="display: none;">
-    <header class="cabecalho">
+  <!-- TELA PRINCIPAL DO APLICATIVO -->
+  <div id="appContainer" style="display: none; max-width: 800px; margin: 20px auto; padding: 15px;">
+    
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <div>
-        <p class="marca">ROTA DE ENTREGAS</p>
-        <h1 id="tituloRota">Rota do dia</h1>
-        <p id="dataHoje" class="texto-suave"></p>
+        <h1 id="tituloRota" style="margin: 0;">Rota do dia</h1>
+        <p id="dataHoje" style="margin: 5px 0 0 0; color: #666;"></p>
       </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <button class="botao botao-neutro" type="button" id="botaoSair" style="font-size: 0.85rem; padding: 6px 12px;">Sair</button>
-        <div class="icone" aria-hidden="true">📦</div>
-      </div>
+      <button id="botaoSair" class="botao-pequeno" style="background: #e53e3e; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Sair</button>
     </header>
 
-    <section class="resumo" aria-label="Resumo da rota">
-      <article class="resumo-item">
-        <span>Entregas</span>
-        <strong id="totalEntregas">0</strong>
-      </article>
-      <article class="resumo-item">
-        <span>Pendentes</span>
-        <strong id="totalPendentes">0</strong>
-      </article>
-      <article class="resumo-item">
-        <span>Concluídas</span>
-        <strong id="totalConcluidas">0</strong>
-      </article>
-    </section>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
+      <div style="background: #f7fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center;">
+        <span style="font-size: 12px; color: #718096;">Entregas</span>
+        <h3 id="totalEntregas" style="margin: 5px 0 0 0;">0</h3>
+      </div>
+      <div style="background: #f7fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center;">
+        <span style="font-size: 12px; color: #718096;">Pendentes</span>
+        <h3 id="totalPendentes" style="margin: 5px 0 0 0;">0</h3>
+      </div>
+      <div style="background: #f7fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center;">
+        <span style="font-size: 12px; color: #718096;">Concluídas</span>
+        <h3 id="totalConcluidas" style="margin: 5px 0 0 0;">0</h3>
+      </div>
+    </div>
 
-    <section class="painel painel-data" aria-label="Histórico e exportação">
-      <label class="campo-data">
-        Consultar rota de outra data
-        <input id="dataSelecionada" type="date" aria-label="Data da rota">
-      </label>
-      <button class="botao botao-neutro" type="button" id="botaoHoje">Ir para hoje</button>
-      <button class="botao botao-csv" type="button" id="botaoCsvDia">Exportar dia CSV</button>
-      <button class="botao botao-csv-secundario" type="button" id="botaoBackupCsv">Backup completo CSV</button>
-      <p class="nota-painel">
-        O backup completo inclui as entregas de todas as datas salvas.
-      </p>
-    </section>
-
-    <section class="painel">
-      <div class="cabecalho-secao">
-        <div>
-          <h2>Adicionar entrega</h2>
-          <p class="texto-suave" id="avisoDataCadastro">
-            A entrega será registrada na data selecionada.
-          </p>
-        </div>
+    <!-- Controles, Data e Ações Extras -->
+    <div style="background: #f7fafc; padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px;">
+      <label for="dataSelecionada" style="display: block; margin-bottom: 5px; font-weight: bold;">Consultar rota de outra data</label>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
+        <input type="date" id="dataSelecionada" style="padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px;">
+        <button id="botaoHoje" class="botao-pequeno" style="padding: 7px 12px; background: #4a5568; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Ir para hoje</button>
       </div>
 
+      <!-- Botões de Produtividade: CSV, WhatsApp e Rota Otimizada por GPS -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <label class="botao-pequeno" style="cursor: pointer; background: #2b6cb0; color: white; padding: 8px 12px; border-radius: 4px; display: inline-block; font-size: 14px;">
+          📁 Importar CSV <input type="file" id="inputCsv" accept=".csv" style="display: none;">
+        </label>
+        <button id="botaoOtimizar" class="botao-pequeno" style="background: #d69e2e; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+          📍 Otimizar por GPS
+        </button>
+        <button id="botaoWhatsapp" class="botao-pequeno" style="background: #25d366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+          💬 Partilhar WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulário -->
+    <div style="background: #f7fafc; padding: 15px; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">Adicionar entrega</h3>
+      <p id="avisoDataCadastro" style="font-size: 12px; color: #666; margin-top: -5px;"></p>
+      
       <form id="formEntrega">
         <input type="hidden" id="entregaId">
-
-        <div class="form-grid">
-          <label>
-            Cliente
-            <input id="cliente" required maxlength="80" placeholder="Nome do cliente">
-          </label>
-
-          <label>
-            Telefone <span class="opcional">(opcional)</span>
-            <input id="telefone" type="tel" maxlength="25" placeholder="(83) 99999-9999">
-          </label>
-
-          <label class="campo-largo">
-            Rua ou avenida
-            <input id="rua" required maxlength="120" placeholder="Nome da rua">
-          </label>
-
-          <label>
-            Número
-            <input id="numero" required maxlength="20" placeholder="Ex.: 123">
-          </label>
-
-          <label>
-            Bairro
-            <input id="bairro" required maxlength="80" placeholder="Nome do bairro">
-          </label>
-
-          <label class="campo-largo">
-            Cidade / UF
-            <input id="cidadeUf" required maxlength="80" placeholder="Ex.: João Pessoa - PB">
-          </label>
-
-          <label class="campo-largo">
-            Observação <span class="opcional">(opcional)</span>
-            <textarea id="observacao" rows="2" maxlength="250" placeholder="Ex.: tocar campainha, entregar após as 14h"></textarea>
-          </label>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label for="cliente" style="display: block; font-size: 13px; margin-bottom: 3px;">Cliente</label>
+            <input type="text" id="cliente" required style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
+          <div>
+            <label for="telefone" style="display: block; font-size: 13px; margin-bottom: 3px;">Telefone (opcional)</label>
+            <input type="text" id="telefone" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
         </div>
 
-        <div class="botoes-formulario">
-          <button class="botao botao-primario" type="submit" id="botaoSalvar">Adicionar à rota</button>
-          <button class="botao botao-neutro escondido" type="button" id="botaoCancelar">Cancelar edição</button>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label for="rua" style="display: block; font-size: 13px; margin-bottom: 3px;">Rua ou Avenida</label>
+            <input type="text" id="rua" required style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
+          <div>
+            <label for="numero" style="display: block; font-size: 13px; margin-bottom: 3px;">Número</label>
+            <input type="text" id="numero" required style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div>
+            <label for="bairro" style="display: block; font-size: 13px; margin-bottom: 3px;">Bairro</label>
+            <input type="text" id="bairro" required style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
+          <div>
+            <label for="cidadeUf" style="display: block; font-size: 13px; margin-bottom: 3px;">Cidade/UF</label>
+            <input type="text" id="cidadeUf" required style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+          <label for="observacao" style="display: block; font-size: 13px; margin-bottom: 3px;">Observação</label>
+          <input type="text" id="observacao" style="width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #cbd5e0; border-radius: 4px;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" id="botaoSalvar" style="padding: 8px 15px; background: #2b6cb0; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Adicionar à rota</button>
+          <button type="button" id="botaoCancelar" class="escondido" style="padding: 8px 15px; background: #e2e8f0; color: #333; border: none; border-radius: 4px; cursor: pointer; display: none;">Cancelar</button>
         </div>
       </form>
+    </div>
+
+    <section style="margin-bottom: 20px;">
+      <h2>Entregas Pendentes</h2>
+      <div id="listaPendentes"></div>
     </section>
 
-    <section class="secao-rota">
-      <div class="cabecalho-secao">
-        <div>
-          <h2>Próximas entregas</h2>
-          <p id="textoProgresso" class="texto-suave">Adicione entregas para começar.</p>
-        </div>
-      </div>
-
-      <div id="listaPendentes" class="lista"></div>
+    <section>
+      <h2>Entregas Concluídas (<span id="contadorConcluidas">0</span>)</h2>
+      <div id="listaConcluidas"></div>
     </section>
 
-    <details class="concluidas">
-      <summary>
-        <span>Entregas concluídas</span>
-        <span class="contador-concluidas" id="contadorConcluidas">0</span>
-      </summary>
-      <div id="listaConcluidas" class="lista lista-concluidas"></div>
-    </details>
+  </div>
 
-    <footer>
-      Sistema integrado com Supabase e autenticação segura.
-    </footer>
-  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
 </body>
 </html>
