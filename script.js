@@ -1,8 +1,8 @@
 // ==========================================
 // CONFIGURAÇÃO DO SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hzgrulwdktmknxggsum.supabase.co";[cite: 2]
-const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";[cite: 1]
+const SUPABASE_URL = "https://hzgrulwdktmknxggsum.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
