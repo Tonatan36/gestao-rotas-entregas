@@ -1,9 +1,8 @@
 // ==========================================
 // CONFIGURAÇÃO DO SUPABASE
 // ==========================================
-// Substitua pelas suas credenciais reais do Supabase
-const SUPABASE_URL = "SUA_URL_DO_SUPABASE_AQUI";
-const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_AQUI";
+const SUPABASE_URL = "https://hzgrulwdktmknxggsum.supabase.co";[cite: 2]
+const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";[cite: 1]
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -51,7 +50,6 @@ if (formLogin) {
     const senha = document.querySelector("#loginSenha").value.trim();
 
     // Transforma o nome digitado em um e-mail fictício compatível com o Supabase
-    // Ex: "motorista 1" vira "motorista1@rotas.local"
     const emailFicticio = nomeDigitado.replace(/\s+/g, "") + "@rotas.local";
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
