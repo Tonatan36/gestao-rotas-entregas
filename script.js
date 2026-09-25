@@ -218,15 +218,16 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
     botoesHTML =
       '<a class="link-mapa" href="' + escaparHTML(urlGoogle.toString()) + '" target="_blank" rel="noopener noreferrer">Google Maps</a>' +
       '<a class="link-mapa" href="' + escaparHTML(urlWaze) + '" target="_blank" rel="noopener noreferrer">Waze</a>' +
-      '<button type="button" class="botao-pequeno" data-acao="subir" data-id="' + idEntrega + '" ' + (indice === 0 ? "disabled" : "") + '>↑</button>' +
-      '<button type="button" class="botao-pequeno" data-acao="descer" data-id="' + idEntrega + '" ' + (indice === totalPendentes - 1 ? "disabled" : "") + '>↓</button>' +
       '<button type="button" class="botao-pequeno" data-acao="editar" data-id="' + idEntrega + '">Editar</button>' +
       '<button type="button" class="botao-pequeno botao-marcar" data-acao="concluir" data-id="' + idEntrega + '">Entregue</button>' +
       '<button type="button" class="botao-pequeno" data-acao="excluir" data-id="' + idEntrega + '">Excluir</button>';
   }
 
+  // Atributo draggable ativado apenas para as entregas pendentes
+  const atributoDraggable = !concluida ? 'draggable="true"' : '';
+
   return (
-    '<article class="' + classeEntrega + '">' +
+    '<article class="' + classeEntrega + '" ' + atributoDraggable + ' data-id-card="' + idEntrega + '">' +
       '<div class="entrega-cabecalho">' +
         "<div>" +
           "<h3>" + escaparHTML(entrega.cliente) + "</h3>" +
@@ -408,22 +409,49 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#botaoCancelar").classList.remove("escondido");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  } else if (acao === "subir" || acao === "descer") {
-    const direcao = acao === "subir" ? -1 : 1;
-    await trocarOrdemNoBanco(id, direcao);
   }
 });
 
-async function trocarOrdemNoBanco(id, direcao) {
+// ==========================================
+// LÓGICA DE DRAG AND DROP (ARRASTAR E SOLTAR)
+// ==========================================
+let idElementoArrastado = null;
+
+document.addEventListener("dragstart", function (evento) {
+  const card = evento.target.closest("article[draggable='true']");
+  if (!card) return;
+  idElementoArrastado = card.getAttribute("data-id-card");
+  card.classList.add("arrastando");
+});
+
+document.addEventListener("dragend", function (evento) {
+  const card = evento.target.closest("article");
+  if (card) card.classList.remove("arrastando");
+  idElementoArrastado = null;
+});
+
+document.addEventListener("dragover", function (evento) {
+  evento.preventDefault();
+});
+
+document.addEventListener("drop", async function (evento) {
+  evento.preventDefault();
+  const cardDestino = evento.target.closest("#listaPendentes article");
+  
+  if (!cardDestino || !idElementoArrastado) return;
+
+  const idDestino = cardDestino.getAttribute("data-id-card");
+  if (idElementoArrastado === idDestino) return;
+
   const pendentes = entregasDaData().filter(e => !e.concluida);
-  const indice = pendentes.findIndex(e => e.id == id);
-  const novoIndice = indice + direcao;
+  
+  const indiceOrigem = pendentes.findIndex(e => e.id == idElementoArrastado);
+  const indiceDestino = pendentes.findIndex(e => e.id == idDestino);
 
-  if (indice < 0 || novoIndice < 0 || novoIndice >= pendentes.length) return;
+  if (indiceOrigem < 0 || indiceDestino < 0) return;
 
-  const temp = pendentes[indice];
-  pendentes[indice] = pendentes[novoIndice];
-  pendentes[novoIndice] = temp;
+  const [itemMovido] = pendentes.splice(indiceOrigem, 1);
+  pendentes.splice(indiceDestino, 0, itemMovido);
 
   for (let i = 0; i < pendentes.length; i++) {
     await supabaseClient
@@ -432,8 +460,9 @@ async function trocarOrdemNoBanco(id, direcao) {
       .eq("id", pendentes[i].id);
   }
 
+  mostrarToast("Ordem da rota atualizada!");
   await carregarEntregasDoSupabase();
-}
+});
 
 // ==========================================
 // NOVAS FUNCIONALIDADES: AGRUPAR POR BAIRRO E HISTÓRICO

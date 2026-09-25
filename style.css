@@ -237,7 +237,7 @@ body {
   margin-top: 5px;
 }
 
-/* Listas e Cards de Entregas */
+/* Listas e Cards de Entregas & Drag and Drop */
 .lista-cards {
   display: flex;
   flex-direction: column;
@@ -250,6 +250,18 @@ body {
   border-radius: 6px;
   padding: 15px;
   position: relative;
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.entrega:active {
+  cursor: grabbing;
+}
+
+.entrega.arrastando {
+  opacity: 0.4;
+  background: #e2e8f0;
+  border: 2px dashed #0284c7;
 }
 
 .entrega.proxima {
@@ -260,6 +272,7 @@ body {
 .entrega-finalizada {
   opacity: 0.75;
   background: #f8fafc;
+  cursor: default;
 }
 
 .entrega-cabecalho {
