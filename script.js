@@ -384,7 +384,6 @@ document.addEventListener("click", async function (evento) {
   } else if (acao === "concluir" || acao === "desfazer") {
     const novoStatus = acao === "concluir" ? "concluida" : "pendente";
 
-    // Atualiza apenas a coluna 'status' para evitar erros de colunas inexistentes
     const { error } = await supabaseClient.from("rotas").update({ status: novoStatus }).eq("id", id);
     if (error) {
       console.error("Erro ao alterar status:", error);
@@ -434,6 +433,66 @@ async function trocarOrdemNoBanco(id, direcao) {
   }
 
   await carregarEntregasDoSupabase();
+}
+
+// ==========================================
+// NOVAS FUNCIONALIDADES: AGRUPAR POR BAIRRO E HISTÓRICO
+// ==========================================
+const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
+if (botaoAgruparBairro) {
+  botaoAgruparBairro.addEventListener("click", async function () {
+    const pendentes = entregasDaData().filter(e => !e.concluida);
+    if (pendentes.length === 0) {
+      mostrarToast("Não há entregas pendentes para agrupar.", "erro");
+      return;
+    }
+
+    pendentes.sort((a, b) => {
+      const bairroA = (a.bairro || "").trim().toLowerCase();
+      const bairroB = (b.bairro || "").trim().toLowerCase();
+      return bairroA.localeCompare(bairroB);
+    });
+
+    for (let i = 0; i < pendentes.length; i++) {
+      await supabaseClient
+        .from("rotas")
+        .update({ ordem: i + 1 })
+        .eq("id", pendentes[i].id);
+    }
+
+    mostrarToast("Entregas agrupadas por bairro com sucesso!");
+    await carregarEntregasDoSupabase();
+  });
+}
+
+const botaoSalvarHistorico = document.querySelector("#botaoSalvarHistorico");
+if (botaoSalvarHistorico) {
+  botaoSalvarHistorico.addEventListener("click", async function () {
+    const dataSelecionada = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataSelecionada);
+    const concluidas = entregasDoDia.filter(e => e.concluida);
+
+    if (entregasDoDia.length === 0) {
+      mostrarToast("Não há dados para salvar nesta data.", "erro");
+      return;
+    }
+
+    const registroHistorico = {
+      data_rota: dataSelecionada,
+      total_entregas: entregasDoDia.length,
+      concluidas: concluidas.length
+    };
+
+    const { error } = await supabaseClient.from("historico_rotas").insert([registroHistorico]);
+
+    if (error) {
+      console.error("Erro ao salvar histórico:", error);
+      mostrarToast("Erro ao guardar o histórico da rota.", "erro");
+      return;
+    }
+
+    mostrarToast("Histórico do dia guardado com sucesso! 📊");
+  });
 }
 
 // ==========================================

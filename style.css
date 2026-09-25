@@ -1,191 +1,374 @@
 /* ==========================================
-   ESTILOS GERAIS E LAYOUT
+   ESTILOS GERAIS E DO APLICATIVO
    ========================================== */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background-color: #f4f6f8;
   color: #333;
-  line-height: 1.5;
-  padding: 16px;
+  padding: 20px;
 }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-header {
+/* Container de Login */
+.auth-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 24px;
-  background: #fff;
-  padding: 16px 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  height: 100vh;
 }
 
-h1, h2 {
+.auth-box {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-box h2 {
+  margin-bottom: 10px;
   color: #111;
 }
 
-/* ==========================================
-   CARTÕES DE ENTREGA
-   ========================================== */
-.entrega {
-  background: #fff;
-  border: 1px solid #e1e4e8;
+.auth-box p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Container Principal */
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.cabecalho-app {
+  background: #ffffff;
+  padding: 20px;
   border-radius: 8px;
-  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.topo-acoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.topo-acoes h1 {
+  font-size: 24px;
+  color: #111;
+}
+
+.data-hoje {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Painel de Estatísticas */
+.estatisticas-painel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.card-estatistica {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.numero-estatistica {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  color: #0284c7;
+}
+
+.rotulo-estatistica {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Secção de Formulário e Ferramentas */
+.secao-formulario, .secao-ferramentas, .secao-lista {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.secao-formulario h2, .secao-lista h2 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #1e293b;
+}
+
+.grid-formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.grupo-formulario {
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  position: relative; /* Mantém o fluxo normal e permite posicionar filhos com absolute com segurança */
+}
+
+.grupo-formulario label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #475569;
+}
+
+.grupo-formulario input,
+.grupo-formulario textarea,
+.grupo-formulario select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.grupo-formulario input:focus,
+.grupo-formulario textarea:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1);
+}
+
+/* Botões */
+.botao-principal {
+  background-color: #0284c7;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.botao-principal:hover {
+  background-color: #0369a1;
+}
+
+.botao-secundario {
+  background-color: #64748b;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-secundario:hover {
+  background-color: #475569;
+}
+
+.botao-pequeno {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.botao-pequeno:hover {
+  background-color: #e2e8f0;
+}
+
+.botao-arquivo {
+  background-color: #f8fafc;
+}
+
+.botoes-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.escondido {
+  display: none !important;
+}
+
+/* Ações Extras e Ferramentas */
+.acoes-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.data-seletor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aviso-data {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+/* Listas e Cards de Entregas */
+.lista-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.entrega {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 15px;
+  position: relative;
 }
 
 .entrega.proxima {
-  border-color: #0366d6;
-  box-shadow: 0 0 0 2px rgba(3, 102, 214, 0.15);
+  border-left: 4px solid #0284c7;
+  background: #f0f9ff;
 }
 
 .entrega-finalizada {
-  background-color: #fafbfc;
   opacity: 0.75;
+  background: #f8fafc;
 }
 
 .entrega-cabecalho {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+.entrega-cabecalho h3 {
+  font-size: 16px;
+  color: #1e293b;
+  margin-bottom: 2px;
 }
 
 .endereco {
-  color: #586069;
-  font-size: 0.95rem;
-  margin-top: 2px;
+  font-size: 13px;
+  color: #64748b;
 }
 
-/* ==========================================
-   ETIQUETAS (BADGES) - CORREÇÃO DE CLIQUE
-   ========================================== */
+.detalhe {
+  font-size: 13px;
+  color: #475569;
+  margin-top: 4px;
+}
+
 .etiqueta {
-  background-color: #e1e4e8;
-  color: #24292e;
-  font-size: 0.75rem;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 12px;
-  white-space: nowrap;
-  pointer-events: none; /* ESSENCIAL: Impede que a etiqueta bloqueie cliques do rato nos botões */
+  text-transform: uppercase;
 }
 
 .etiqueta.concluida {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.entrega.proxima .etiqueta {
-  background-color: #0366d6;
-  color: #fff;
-}
-
-/* ==========================================
-   DETALHES E BOTÕES
-   ========================================== */
-.detalhe {
-  font-size: 0.9rem;
-  color: #444;
-  margin-bottom: 6px;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .acoes-entrega {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 12px;
-  align-items: center;
-  position: relative;
-  z-index: 2; /* Garante que os botões fiquem sempre na camada superior clicável */
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
 }
 
-.botao-pequeno, .link-mapa {
-  background-color: #f1f8ff;
-  color: #0366d6;
-  border: 1px solid #c8e1ff;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
+.link-mapa {
+  background-color: #f1f5f9;
+  color: #0284c7;
+  border: 1px solid #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: 500;
 }
 
-.botao-pequeno:hover, .link-mapa:hover {
-  background-color: #e1f0ff;
+.link-mapa:hover {
+  background-color: #e2e8f0;
 }
 
-.botao-pequeno.botao-marcar {
-  background-color: #28a745;
-  color: #fff;
-  border-color: #28a745;
+.botao-marcar {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
 }
 
-.botao-pequeno.botao-marcar:hover {
-  background-color: #218838;
+.botao-marcar:hover {
+  background-color: #bbf7d0;
 }
 
-.botao-pequeno:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ==========================================
-   ESTADOS E TOASTS
-   ========================================== */
 .vazio {
   text-align: center;
-  color: #6a737d;
-  padding: 24px;
-  background: #fff;
-  border: 1px dashed #e1e4e8;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  color: #94a3b8;
+  padding: 20px;
+  font-size: 14px;
 }
 
-#toastContainer {
+/* Sistema de Feedback (Toasts) */
+.toast-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  z-index: 1000;
 }
 
 .toast {
-  background-color: #24292e;
-  color: #fff;
-  padding: 12px 18px;
+  background: #1e293b;
+  color: white;
+  padding: 12px 20px;
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-size: 0.9rem;
+  font-size: 14px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   transition: opacity 0.3s ease;
 }
 
 .toast.erro {
-  background-color: #d73a49;
+  background: #ef4444;
 }
 
-.escondido {
-  display: none !important;
+.mensagem-erro {
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 10px;
 }
