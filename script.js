@@ -4,7 +4,12 @@
 const SUPABASE_URL = "https://hzgrulwdktmknxggsum.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Inicialização segura garantindo o carregamento correto via CDN global
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+if (!supabaseClient) {
+  console.error("Erro crítico: O script do Supabase não foi carregado corretamente no HTML.");
+}
 
 // Referências da Tela de Login e App
 const authContainer = document.querySelector("#authContainer");
@@ -23,12 +28,15 @@ const campoId = document.querySelector("#entregaId");
 const campoData = document.querySelector("#dataSelecionada");
 
 let entregas = [];
-campoData.value = hojeLocal();
+if (campoData) {
+  campoData.value = hojeLocal();
+}
 
 // ==========================================
 // CONTROLE DE SESSÃO E LOGIN POR NOME
 // ==========================================
 async function verificarSessao() {
+  if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
   
   if (session) {
@@ -44,7 +52,7 @@ async function verificarSessao() {
 if (formLogin) {
   formLogin.addEventListener("submit", async function (evento) {
     evento.preventDefault();
-    msgErroLogin.style.display = "none";
+    if (msgErroLogin) msgErroLogin.style.display = "none";
 
     const nomeDigitado = document.querySelector("#loginNome").value.trim().toLowerCase();
     const senha = document.querySelector("#loginSenha").value.trim();
@@ -58,8 +66,10 @@ if (formLogin) {
     });
 
     if (error) {
-      msgErroLogin.textContent = "Nome ou senha incorretos.";
-      msgErroLogin.style.display = "block";
+      if (msgErroLogin) {
+        msgErroLogin.textContent = "Nome ou senha incorretos.";
+        msgErroLogin.style.display = "block";
+      }
     } else {
       verificarSessao();
     }
@@ -176,7 +186,7 @@ function enderecoDa(entrega) {
 }
 
 function entregasDaData(data) {
-  const dataUsada = data || campoData.value || hojeLocal();
+  const dataUsada = data || (campoData ? campoData.value : "") || hojeLocal();
 
   return entregas
     .filter(function (entrega) {
@@ -291,7 +301,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
 }
 
 function atualizarTela() {
-  const dataSelecionada = campoData.value || hojeLocal();
+  const dataSelecionada = (campoData ? campoData.value : "") || hojeLocal();
   const entregasDoDia = entregasDaData(dataSelecionada);
 
   const pendentes = entregasDoDia.filter(function (entrega) {
@@ -316,117 +326,136 @@ function atualizarTela() {
     elDataHoje.textContent = dataPorExtenso.charAt(0).toUpperCase() + dataPorExtenso.slice(1);
   }
 
-  document.querySelector("#totalEntregas").textContent = entregasDoDia.length;
-  document.querySelector("#totalPendentes").textContent = pendentes.length;
-  document.querySelector("#totalConcluidas").textContent = concluidas.length;
-  document.querySelector("#contadorConcluidas").textContent = concluidas.length;
+  const elTotalEntregas = document.querySelector("#totalEntregas");
+  if (elTotalEntregas) elTotalEntregas.textContent = entregasDoDia.length;
 
-  document.querySelector("#avisoDataCadastro").textContent =
-    "Novas entregas serão registradas em " + formatarDataCurta(dataSelecionada) + ".";
+  const elTotalPendentes = document.querySelector("#totalPendentes");
+  if (elTotalPendentes) elTotalPendentes.textContent = pendentes.length;
 
-  if (pendentes.length === 0) {
-    if (entregasDoDia.length > 0) {
-      listaPendentes.innerHTML = '<div class="vazio">Rota concluída! Todas as entregas foram feitas. 🎉</div>';
+  const elTotalConcluidas = document.querySelector("#totalConcluidas");
+  if (elTotalConcluidas) elTotalConcluidas.textContent = concluidas.length;
+
+  const elContadorConcluidas = document.querySelector("#contadorConcluidas");
+  if (elContadorConcluidas) elContadorConcluidas.textContent = concluidas.length;
+
+  const elAvisoData = document.querySelector("#avisoDataCadastro");
+  if (elAvisoData) {
+    elAvisoData.textContent = "Novas entregas serão registradas em " + formatarDataCurta(dataSelecionada) + ".";
+  }
+
+  if (listaPendentes) {
+    if (pendentes.length === 0) {
+      if (entregasDoDia.length > 0) {
+        listaPendentes.innerHTML = '<div class="vazio">Rota concluída! Todas as entregas foram feitas. 🎉</div>';
+      } else {
+        listaPendentes.innerHTML = '<div class="vazio">Nenhuma entrega cadastrada em ' + escaparHTML(formatarDataCurta(dataSelecionada)) + ".</div>";
+      }
     } else {
-      listaPendentes.innerHTML = '<div class="vazio">Nenhuma entrega cadastrada em ' + escaparHTML(formatarDataCurta(dataSelecionada)) + ".</div>";
+      listaPendentes.innerHTML = pendentes
+        .map(function (entrega, indice) {
+          return montarCartao(entrega, indice, pendentes.length, false);
+        })
+        .join("");
     }
-  } else {
-    listaPendentes.innerHTML = pendentes
-      .map(function (entrega, indice) {
-        return montarCartao(entrega, indice, pendentes.length, false);
-      })
-      .join("");
   }
 
   const textoProgresso = document.querySelector("#textoProgresso");
-  if (entregasDoDia.length === 0) {
-    textoProgresso.textContent = "Adicione entregas para começar.";
-  } else {
-    textoProgresso.textContent = concluidas.length + " de " + entregasDoDia.length + " entregas concluídas.";
+  if (textoProgresso) {
+    if (entregasDoDia.length === 0) {
+      textoProgresso.textContent = "Adicione entregas para começar.";
+    } else {
+      textoProgresso.textContent = concluidas.length + " de " + entregasDoDia.length + " entregas concluídas.";
+    }
   }
 
-  if (concluidas.length === 0) {
-    listaConcluidas.innerHTML = '<div class="vazio">Não há entregas concluídas nesta data.</div>';
-  } else {
-    listaConcluidas.innerHTML = concluidas
-      .map(function (entrega, indice) {
-        return montarCartao(entrega, indice, concluidas.length, true);
-      })
-      .join("");
+  if (listaConcluidas) {
+    if (concluidas.length === 0) {
+      listaConcluidas.innerHTML = '<div class="vazio">Não há entregas concluídas nesta data.</div>';
+    } else {
+      listaConcluidas.innerHTML = concluidas
+        .map(function (entrega, indice) {
+          return montarCartao(entrega, indice, concluidas.length, true);
+        })
+        .join("");
+    }
   }
 }
 
 function limparFormulario() {
-  form.reset();
-  campoId.value = "";
-  document.querySelector("#botaoSalvar").textContent = "Adicionar à rota";
-  document.querySelector("#botaoCancelar").classList.add("escondido");
+  if (form) form.reset();
+  if (campoId) campoId.value = "";
+  const botaoSalvar = document.querySelector("#botaoSalvar");
+  if (botaoSalvar) botaoSalvar.textContent = "Adicionar à rota";
+  const botaoCancelar = document.querySelector("#botaoCancelar");
+  if (botaoCancelar) botaoCancelar.classList.add("escondido");
 }
 
 // ==========================================
 // FORMULÁRIO DE CADASTRO / EDIÇÃO NO SUPABASE
 // ==========================================
-form.addEventListener("submit", async function (evento) {
-  evento.preventDefault();
+if (form) {
+  form.addEventListener("submit", async function (evento) {
+    evento.preventDefault();
 
-  const dados = {
-    cliente: document.querySelector("#cliente").value.trim(),
-    telefone: document.querySelector("#telefone").value.trim(),
-    rua: document.querySelector("#rua").value.trim(),
-    numero: document.querySelector("#numero").value.trim(),
-    bairro: document.querySelector("#bairro").value.trim(),
-    cidade_uf: document.querySelector("#cidadeUf").value.trim(),
-    observacao: document.querySelector("#observacao").value.trim()
-  };
-
-  const idEdicao = campoId.value;
-
-  if (idEdicao) {
-    const { error } = await supabaseClient
-      .from("rotas")
-      .update(dados)
-      .eq("id", idEdicao);
-
-    if (error) {
-      console.error("Erro ao atualizar:", error);
-      alert("Erro ao atualizar entrega.");
-      return;
-    }
-  } else {
-    const dataDaRota = campoData.value || hojeLocal();
-    const entregasDaRota = entregasDaData(dataDaRota);
-    const maiorOrdem = entregasDaRota.length
-      ? Math.max(...entregasDaRota.map(e => e.ordem || 0))
-      : 0;
-
-    const novaEntregaDb = {
-      data_rota: dataDaRota,
-      cliente: dados.cliente,
-      telefone: dados.telefone,
-      rua: dados.rua,
-      numero: dados.numero,
-      bairro: dados.bairro,
-      cidade_uf: dados.cidade_uf,
-      observacao: dados.observacao,
-      status: "pendente",
-      ordem: maiorOrdem + 1,
-      criada_em: new Date().toISOString()
+    const dados = {
+      cliente: document.querySelector("#cliente").value.trim(),
+      telefone: document.querySelector("#telefone").value.trim(),
+      rua: document.querySelector("#rua").value.trim(),
+      numero: document.querySelector("#numero").value.trim(),
+      bairro: document.querySelector("#bairro").value.trim(),
+      cidade_uf: document.querySelector("#cidadeUf").value.trim(),
+      observacao: document.querySelector("#observacao").value.trim()
     };
 
-    const { error } = await supabaseClient
-      .from("rotas")
-      .insert([novaEntregaDb]);
+    const idEdicao = campoId ? campoId.value : "";
 
-    if (error) {
-      console.error("Erro ao inserir:", error);
-      alert("Erro ao salvar nova entrega.");
-      return;
+    if (idEdicao) {
+      const { error } = await supabaseClient
+        .from("rotas")
+        .update(dados)
+        .eq("id", idEdicao);
+
+      if (error) {
+        console.error("Erro ao atualizar:", error);
+        alert("Erro ao atualizar entrega.");
+        return;
+      }
+    } else {
+      const dataDaRota = (campoData ? campoData.value : "") || hojeLocal();
+      const entregasDaRota = entregasDaData(dataDaRota);
+      const maiorOrdem = entregasDaRota.length
+        ? Math.max(...entregasDaRota.map(e => e.ordem || 0))
+        : 0;
+
+      const novaEntregaDb = {
+        data_rota: dataDaRota,
+        cliente: dados.cliente,
+        telefone: dados.telefone,
+        rua: dados.rua,
+        numero: dados.numero,
+        bairro: dados.bairro,
+        cidade_uf: dados.cidade_uf,
+        observacao: dados.observacao,
+        status: "pendente",
+        ordem: maiorOrdem + 1,
+        criada_em: new Date().toISOString()
+      };
+
+      const { error } = await supabaseClient
+        .from("rotas")
+        .insert([novaEntregaDb]);
+
+      if (error) {
+        console.error("Erro ao inserir:", error);
+        alert("Erro ao salvar nova entrega.");
+        return;
+      }
     }
-  }
 
-  limparFormulario();
-  await carregarEntregasDoSupabase();
-});
+    limparFormulario();
+    await carregarEntregasDoSupabase();
+  });
+}
 
 // ==========================================
 // AÇÕES NOS CARDS
@@ -455,7 +484,7 @@ document.addEventListener("click", async function (evento) {
     if (!error) await carregarEntregasDoSupabase();
   } else if (acao === "editar") {
     const entrega = entregas.find(e => e.id === id);
-    if (entrega) {
+    if (entrega && campoId) {
       campoId.value = entrega.id;
       document.querySelector("#cliente").value = entrega.cliente;
       document.querySelector("#telefone").value = entrega.telefone || "";
@@ -499,7 +528,7 @@ async function trocarOrdemNoBanco(id, direcao) {
 const botaoHoje = document.querySelector("#botaoHoje");
 if (botaoHoje) {
   botaoHoje.addEventListener("click", function () {
-    campoData.value = hojeLocal();
+    if (campoData) campoData.value = hojeLocal();
     atualizarTela();
   });
 }
