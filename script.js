@@ -127,6 +127,7 @@ async function carregarEntregasDoSupabase() {
           bairro: item.bairro,
           cidadeUf: item.cidade_uf,
           observacao: item.observacao,
+          prioridade: item.prioridade || "normal", // Suporte à prioridade
           concluida: item.status === "concluida",
           ordem: item.ordem || 0,
           criadaEm: item.criada_em ? new Date(item.criada_em).getTime() : Date.now()
@@ -198,15 +199,20 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
   const urlWaze = "https://waze.com/ul?q=" + encodeURIComponent(endereco) + "&navigate=yes";
 
   let etiqueta;
+  const textoPrioridade = entrega.prioridade ? entrega.prioridade.charAt(0).toUpperCase() + entrega.prioridade.slice(1) : "Normal";
+  const badgePrioridade = `<span class="etiqueta-prioridade">${textoPrioridade}</span>`;
+
   if (concluida) {
-    etiqueta = '<span class="etiqueta concluida">Concluída</span>';
+    etiqueta = '<span class="etiqueta concluida">Concluída</span>' + badgePrioridade;
   } else if (indice === 0) {
-    etiqueta = '<span class="etiqueta">Próxima entrega</span>';
+    etiqueta = '<span class="etiqueta">Próxima entrega</span>' + badgePrioridade;
   } else {
-    etiqueta = '<span class="etiqueta">Parada ' + (indice + 1) + "</span>";
+    etiqueta = '<span class="etiqueta">Parada ' + (indice + 1) + "</span>" + badgePrioridade;
   }
 
-  const classeEntrega = "entrega " + (!concluida && indice === 0 ? "proxima " : "") + (concluida ? "entrega-finalizada" : "");
+  // Aplicação da classe de prioridade visual no cartão
+  const classePrioridade = `prioridade-${entrega.prioridade || 'normal'}`;
+  const classeEntrega = "entrega " + classePrioridade + " " + (!concluida && indice === 0 ? "proxima " : "") + (concluida ? "entrega-finalizada" : "");
 
   let telefoneHTML = entrega.telefone ? '<p class="detalhe">Telefone: <a href="tel:' + escaparHTML(telefoneLimpo) + '">' + escaparHTML(entrega.telefone) + "</a></p>" : "";
   let observacaoHTML = entrega.observacao ? '<p class="detalhe"><strong>Observação:</strong> ' + escaparHTML(entrega.observacao) + "</p>" : "";
@@ -223,7 +229,6 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
       '<button type="button" class="botao-pequeno" data-acao="excluir" data-id="' + idEntrega + '">Excluir</button>';
   }
 
-  // Atributo draggable ativado apenas para as entregas pendentes
   const atributoDraggable = !concluida ? 'draggable="true"' : '';
 
   return (
@@ -233,7 +238,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
           "<h3>" + escaparHTML(entrega.cliente) + "</h3>" +
           '<p class="endereco">' + escaparHTML(endereco) + "</p>" +
         "</div>" +
-        etiqueta +
+        '<div>' + etiqueta + '</div>' +
       "</div>" +
       telefoneHTML +
       observacaoHTML +
@@ -286,6 +291,9 @@ function atualizarTela() {
 function limparFormulario() {
   if (form) form.reset();
   if (campoId) campoId.value = "";
+  const inputPrioridade = document.querySelector("#prioridade");
+  if (inputPrioridade) inputPrioridade.value = "normal";
+
   const botaoSalvar = document.querySelector("#botaoSalvar");
   if (botaoSalvar) botaoSalvar.textContent = "Adicionar à rota";
   const botaoCancelar = document.querySelector("#botaoCancelar");
@@ -306,7 +314,8 @@ if (form) {
       numero: document.querySelector("#numero").value.trim(),
       bairro: document.querySelector("#bairro").value.trim(),
       cidade_uf: document.querySelector("#cidadeUf").value.trim(),
-      observacao: document.querySelector("#observacao").value.trim()
+      observacao: document.querySelector("#observacao").value.trim(),
+      prioridade: document.querySelector("#prioridade") ? document.querySelector("#prioridade").value : "normal"
     };
 
     const idEdicao = campoId ? campoId.value.trim() : "";
@@ -335,6 +344,7 @@ if (form) {
         bairro: dados.bairro,
         cidade_uf: dados.cidade_uf,
         observacao: dados.observacao,
+        prioridade: dados.prioridade,
         status: "pendente",
         ordem: maiorOrdem + 1,
         criada_em: new Date().toISOString()
@@ -404,6 +414,9 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#bairro").value = entrega.bairro;
       document.querySelector("#cidadeUf").value = entrega.cidadeUf;
       document.querySelector("#observacao").value = entrega.observacao || "";
+      
+      const inputPrioridade = document.querySelector("#prioridade");
+      if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
 
       document.querySelector("#botaoSalvar").textContent = "Salvar alterações";
       document.querySelector("#botaoCancelar").classList.remove("escondido");
@@ -465,7 +478,7 @@ document.addEventListener("drop", async function (evento) {
 });
 
 // ==========================================
-// NOVAS FUNCIONALIDADES: AGRUPAR POR BAIRRO E HISTÓRICO
+// NOVAS FUNCIONALIDADES: AGRUPAR, HISTÓRICO E EXPORTAÇÃO CSV
 // ==========================================
 const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
 if (botaoAgruparBairro) {
@@ -524,6 +537,41 @@ if (botaoSalvarHistorico) {
   });
 }
 
+// 📥 NOVA FUNÇÃO: EXPORTAR RELATÓRIO EM CSV (Para LibreOffice e Power BI)
+function exportarRelatorioCSV() {
+  const dataSelecionada = campoData ? campoData.value : hojeLocal();
+  const entregasDoDia = entregasDaData(dataSelecionada);
+
+  if (entregasDoDia.length === 0) {
+    mostrarToast("Não há entregas nesta data para exportar.", "erro");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Prioridade,Status\n";
+
+  entregasDoDia.forEach(function (e) {
+    const statusTexto = e.concluida ? "Concluída" : "Pendente";
+    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
+    csvContent += linha + "\r\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `relatorio_rotas_${dataSelecionada}.csv`);
+  document.body.appendChild(link);
+  
+  link.click();
+  document.body.removeChild(link);
+  mostrarToast("Relatório CSV exportado com sucesso! 📥");
+}
+
+// Se tiver um botão no HTML com id "botaoExportarCsv", ele aciona automaticamente
+const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
+if (botaoExportarCsv) {
+  botaoExportarCsv.addEventListener("click", exportarRelatorioCSV);
+}
+
 // ==========================================
 // IMPORTAÇÃO DE CSV, WHATSAPP E GPS
 // ==========================================
@@ -558,6 +606,7 @@ if (inputCsv) {
             bairro: (colunas[4] || "").trim(),
             cidade_uf: (colunas[5] || "").trim(),
             observacao: (colunas[6] || "").trim(),
+            prioridade: "normal",
             status: "pendente",
             ordem: proximaOrdem++,
             criada_em: new Date().toISOString()

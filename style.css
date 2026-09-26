@@ -275,6 +275,46 @@ body {
   cursor: default;
 }
 
+/* --- ADIÇÃO: CORES E ESTILOS DE PRIORIDADE INTELIGENTE --- */
+.entrega.prioridade-urgente {
+  border-left: 5px solid #ef4444;
+  background-color: #fef2f2;
+}
+
+.entrega.prioridade-moderada {
+  border-left: 5px solid #f59e0b;
+  background-color: #fffbeb;
+}
+
+.entrega.prioridade-normal {
+  border-left: 5px solid #10b981;
+}
+
+.etiqueta-prioridade {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+.prioridade-urgente .etiqueta-prioridade {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.prioridade-moderada .etiqueta-prioridade {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.prioridade-normal .etiqueta-prioridade {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+/* -------------------------------------------------------- */
+
 .entrega-cabecalho {
   display: flex;
   justify-content: space-between;

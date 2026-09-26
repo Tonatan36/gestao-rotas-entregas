@@ -92,6 +92,16 @@
             </div>
           </div>
 
+          <!-- NOVO: Campo de Prioridade / Alerta Inteligente -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="prioridade">Nível de Prioridade / Urgência</label>
+            <select id="prioridade">
+              <option value="normal">Normal (Verde)</option>
+              <option value="moderada">Moderada (Amarelo)</option>
+              <option value="urgente">Urgente (Vermelho)</option>
+            </select>
+          </div>
+
           <div class="grupo-formulario">
             <label for="observacao">Observações (Ponto de referência, portão, etc.)</label>
             <textarea id="observacao" rows="2" placeholder="Ex: Deixar na portaria"></textarea>
@@ -113,15 +123,17 @@
         </div>
         <p id="avisoDataCadastro" class="aviso-data">Novas entregas serão registradas na data selecionada.</p>
 
-        <!-- Barra de Ações Avançadas (CSV, GPS, WhatsApp, Agrupar, Histórico) -->
+        <!-- Barra de Ações Avançadas -->
         <div class="acoes-extras">
           <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
           <input type="file" id="inputCsv" accept=".csv" style="display: none;">
 
+          <!-- NOVO: Botão de Exportar Relatório CSV -->
+          <button type="button" id="botaoExportarCsv" class="botao-pequeno" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;">📥 Exportar CSV</button>
+
           <button type="button" id="botaoOtimizar" class="botao-pequeno">📍 Otimizar GPS</button>
           <button type="button" id="botaoWhatsapp" class="botao-pequeno">💬 Partilhar WhatsApp</button>
           
-          <!-- Novos botões integrados -->
           <button type="button" id="botaoAgruparBairro" class="botao-pequeno">📦 Agrupar por Bairro</button>
           <button type="button" id="botaoSalvarHistorico" class="botao-pequeno">💾 Salvar Histórico</button>
         </div>
