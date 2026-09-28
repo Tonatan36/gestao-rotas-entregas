@@ -92,7 +92,19 @@
             </div>
           </div>
 
-          <!-- NOVO: Campo de Prioridade / Alerta Inteligente -->
+          <!-- NOVO: Campo do Vendedor -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="vendedor">Vendedor *</label>
+            <select id="vendedor" required>
+              <option value="">Selecione o vendedor...</option>
+              <option value="Paulo">Paulo</option>
+              <option value="Alexandre">Alexandre</option>
+              <option value="Yan">Yan</option>
+              <option value="Ewerton">Ewerton</option>
+            </select>
+          </div>
+
+          <!-- Campo de Prioridade / Alerta Inteligente -->
           <div class="grupo-formulario" style="margin-top: 10px;">
             <label for="prioridade">Nível de Prioridade / Urgência</label>
             <select id="prioridade">
@@ -128,7 +140,7 @@
           <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
           <input type="file" id="inputCsv" accept=".csv" style="display: none;">
 
-          <!-- NOVO: Botão de Exportar Relatório CSV -->
+          <!-- Botão de Exportar Relatório CSV -->
           <button type="button" id="botaoExportarCsv" class="botao-pequeno" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;">📥 Exportar CSV</button>
 
           <button type="button" id="botaoOtimizar" class="botao-pequeno">📍 Otimizar GPS</button>

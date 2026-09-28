@@ -425,3 +425,8 @@ body {
   font-size: 13px;
   margin-bottom: 10px;
 }
+
+/* Força a digitação em caixa alta (maiúsculas) na tela */
+input[type="text"], textarea {
+    text-transform: uppercase;
+}

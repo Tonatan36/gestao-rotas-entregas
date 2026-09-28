@@ -126,8 +126,9 @@ async function carregarEntregasDoSupabase() {
           numero: item.numero,
           bairro: item.bairro,
           cidadeUf: item.cidade_uf,
+          vendedor: item.vendedor || "Não informado",
           observacao: item.observacao,
-          prioridade: item.prioridade || "normal", // Suporte à prioridade
+          prioridade: item.prioridade || "normal",
           concluida: item.status === "concluida",
           ordem: item.ordem || 0,
           criadaEm: item.criada_em ? new Date(item.criada_em).getTime() : Date.now()
@@ -210,11 +211,11 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
     etiqueta = '<span class="etiqueta">Parada ' + (indice + 1) + "</span>" + badgePrioridade;
   }
 
-  // Aplicação da classe de prioridade visual no cartão
   const classePrioridade = `prioridade-${entrega.prioridade || 'normal'}`;
   const classeEntrega = "entrega " + classePrioridade + " " + (!concluida && indice === 0 ? "proxima " : "") + (concluida ? "entrega-finalizada" : "");
 
   let telefoneHTML = entrega.telefone ? '<p class="detalhe">Telefone: <a href="tel:' + escaparHTML(telefoneLimpo) + '">' + escaparHTML(entrega.telefone) + "</a></p>" : "";
+  let vendedorHTML = '<p class="detalhe"><strong>Vendedor:</strong> ' + escaparHTML(entrega.vendedor) + '</p>';
   let observacaoHTML = entrega.observacao ? '<p class="detalhe"><strong>Observação:</strong> ' + escaparHTML(entrega.observacao) + "</p>" : "";
 
   let botoesHTML = "";
@@ -222,6 +223,10 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
     botoesHTML = '<button type="button" class="botao-pequeno" data-acao="desfazer" data-id="' + idEntrega + '">Voltar para pendentes</button>';
   } else {
     botoesHTML =
+      '<div style="display: flex; gap: 8px; margin-bottom: 10px; width: 100%;">' +
+        '<button type="button" class="botao-pequeno" style="flex: 1; background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" data-acao="subir" data-id="' + idEntrega + '">⬆️ Subir</button>' +
+        '<button type="button" class="botao-pequeno" style="flex: 1; background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" data-acao="descer" data-id="' + idEntrega + '">⬇️ Descer</button>' +
+      '</div>' +
       '<a class="link-mapa" href="' + escaparHTML(urlGoogle.toString()) + '" target="_blank" rel="noopener noreferrer">Google Maps</a>' +
       '<a class="link-mapa" href="' + escaparHTML(urlWaze) + '" target="_blank" rel="noopener noreferrer">Waze</a>' +
       '<button type="button" class="botao-pequeno" data-acao="editar" data-id="' + idEntrega + '">Editar</button>' +
@@ -229,10 +234,8 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
       '<button type="button" class="botao-pequeno" data-acao="excluir" data-id="' + idEntrega + '">Excluir</button>';
   }
 
-  const atributoDraggable = !concluida ? 'draggable="true"' : '';
-
   return (
-    '<article class="' + classeEntrega + '" ' + atributoDraggable + ' data-id-card="' + idEntrega + '">' +
+    '<article class="' + classeEntrega + '" data-id-card="' + idEntrega + '">' +
       '<div class="entrega-cabecalho">' +
         "<div>" +
           "<h3>" + escaparHTML(entrega.cliente) + "</h3>" +
@@ -241,6 +244,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
         '<div>' + etiqueta + '</div>' +
       "</div>" +
       telefoneHTML +
+      vendedorHTML +
       observacaoHTML +
       '<div class="acoes-entrega">' + botoesHTML + "</div>" +
     "</article>"
@@ -293,6 +297,8 @@ function limparFormulario() {
   if (campoId) campoId.value = "";
   const inputPrioridade = document.querySelector("#prioridade");
   if (inputPrioridade) inputPrioridade.value = "normal";
+  const inputVendedor = document.querySelector("#vendedor");
+  if (inputVendedor) inputVendedor.value = "";
 
   const botaoSalvar = document.querySelector("#botaoSalvar");
   if (botaoSalvar) botaoSalvar.textContent = "Adicionar à rota";
@@ -301,20 +307,21 @@ function limparFormulario() {
 }
 
 // ==========================================
-// FORMULÁRIO DE CADASTRO / EDIÇÃO
+// FORMULÁRIO DE CADASTRO / EDIÇÃO (Com Caixa Alta Aplicada)
 // ==========================================
 if (form) {
   form.addEventListener("submit", async function (evento) {
     evento.preventDefault();
 
     const dados = {
-      cliente: document.querySelector("#cliente").value.trim(),
+      cliente: document.querySelector("#cliente").value.trim().toUpperCase(),
       telefone: document.querySelector("#telefone").value.trim(),
-      rua: document.querySelector("#rua").value.trim(),
-      numero: document.querySelector("#numero").value.trim(),
-      bairro: document.querySelector("#bairro").value.trim(),
-      cidade_uf: document.querySelector("#cidadeUf").value.trim(),
-      observacao: document.querySelector("#observacao").value.trim(),
+      rua: document.querySelector("#rua").value.trim().toUpperCase(),
+      numero: document.querySelector("#numero").value.trim().toUpperCase(),
+      bairro: document.querySelector("#bairro").value.trim().toUpperCase(),
+      cidade_uf: document.querySelector("#cidadeUf").value.trim().toUpperCase(),
+      vendedor: document.querySelector("#vendedor").value,
+      observacao: document.querySelector("#observacao").value.trim().toUpperCase(),
       prioridade: document.querySelector("#prioridade") ? document.querySelector("#prioridade").value : "normal"
     };
 
@@ -343,6 +350,7 @@ if (form) {
         numero: dados.numero,
         bairro: dados.bairro,
         cidade_uf: dados.cidade_uf,
+        vendedor: dados.vendedor,
         observacao: dados.observacao,
         prioridade: dados.prioridade,
         status: "pendente",
@@ -413,6 +421,7 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#numero").value = entrega.numero;
       document.querySelector("#bairro").value = entrega.bairro;
       document.querySelector("#cidadeUf").value = entrega.cidadeUf;
+      document.querySelector("#vendedor").value = entrega.vendedor || "";
       document.querySelector("#observacao").value = entrega.observacao || "";
       
       const inputPrioridade = document.querySelector("#prioridade");
@@ -422,59 +431,31 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#botaoCancelar").classList.remove("escondido");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  } 
+  // Lógica de subir e descer a ordem com as setas (ideal para mobile/iPhone)
+  else if (acao === "subir" || acao === "descer") {
+    const pendentes = entregasDaData().filter(e => !e.concluida);
+    const indexAtual = pendentes.findIndex(e => e.id == id);
+
+    if (indexAtual === -1) return;
+
+    let indexAlvo = acao === "subir" ? indexAtual - 1 : indexAtual + 1;
+
+    if (indexAlvo < 0 || indexAlvo >= pendentes.length) return;
+
+    const itemMovido = pendentes.splice(indexAtual, 1)[0];
+    pendentes.splice(indexAlvo, 0, itemMovido);
+
+    for (let i = 0; i < pendentes.length; i++) {
+      await supabaseClient
+        .from("rotas")
+        .update({ ordem: i + 1 })
+        .eq("id", pendentes[i].id);
+    }
+
+    mostrarToast(acao === "subir" ? "Entrega movida para cima! ⬆️" : "Entrega movida para baixo! ⬇️");
+    await carregarEntregasDoSupabase();
   }
-});
-
-// ==========================================
-// LÓGICA DE DRAG AND DROP (ARRASTAR E SOLTAR)
-// ==========================================
-let idElementoArrastado = null;
-
-document.addEventListener("dragstart", function (evento) {
-  const card = evento.target.closest("article[draggable='true']");
-  if (!card) return;
-  idElementoArrastado = card.getAttribute("data-id-card");
-  card.classList.add("arrastando");
-});
-
-document.addEventListener("dragend", function (evento) {
-  const card = evento.target.closest("article");
-  if (card) card.classList.remove("arrastando");
-  idElementoArrastado = null;
-});
-
-document.addEventListener("dragover", function (evento) {
-  evento.preventDefault();
-});
-
-document.addEventListener("drop", async function (evento) {
-  evento.preventDefault();
-  const cardDestino = evento.target.closest("#listaPendentes article");
-  
-  if (!cardDestino || !idElementoArrastado) return;
-
-  const idDestino = cardDestino.getAttribute("data-id-card");
-  if (idElementoArrastado === idDestino) return;
-
-  const pendentes = entregasDaData().filter(e => !e.concluida);
-  
-  const indiceOrigem = pendentes.findIndex(e => e.id == idElementoArrastado);
-  const indiceDestino = pendentes.findIndex(e => e.id == idDestino);
-
-  if (indiceOrigem < 0 || indiceDestino < 0) return;
-
-  const [itemMovido] = pendentes.splice(indiceOrigem, 1);
-  pendentes.splice(indiceDestino, 0, itemMovido);
-
-  for (let i = 0; i < pendentes.length; i++) {
-    await supabaseClient
-      .from("rotas")
-      .update({ ordem: i + 1 })
-      .eq("id", pendentes[i].id);
-  }
-
-  mostrarToast("Ordem da rota atualizada!");
-  await carregarEntregasDoSupabase();
 });
 
 // ==========================================
@@ -537,7 +518,6 @@ if (botaoSalvarHistorico) {
   });
 }
 
-// 📥 NOVA FUNÇÃO: EXPORTAR RELATÓRIO EM CSV (Para LibreOffice e Power BI)
 function exportarRelatorioCSV() {
   const dataSelecionada = campoData ? campoData.value : hojeLocal();
   const entregasDoDia = entregasDaData(dataSelecionada);
@@ -547,11 +527,11 @@ function exportarRelatorioCSV() {
     return;
   }
 
-  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Prioridade,Status\n";
+  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Prioridade,Status\n";
 
   entregasDoDia.forEach(function (e) {
     const statusTexto = e.concluida ? "Concluída" : "Pendente";
-    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
+    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.vendedor || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
     csvContent += linha + "\r\n";
   });
 
@@ -566,7 +546,6 @@ function exportarRelatorioCSV() {
   mostrarToast("Relatório CSV exportado com sucesso! 📥");
 }
 
-// Se tiver um botão no HTML com id "botaoExportarCsv", ele aciona automaticamente
 const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
 if (botaoExportarCsv) {
   botaoExportarCsv.addEventListener("click", exportarRelatorioCSV);
@@ -599,13 +578,14 @@ if (inputCsv) {
         if (colunas.length >= 4) {
           const novaEntregaDb = {
             data_rota: dataDaRota,
-            cliente: (colunas[0] || "").trim(),
+            cliente: (colunas[0] || "").trim().toUpperCase(),
             telefone: (colunas[1] || "").trim(),
-            rua: (colunas[2] || "").trim(),
-            numero: (colunas[3] || "").trim(),
-            bairro: (colunas[4] || "").trim(),
-            cidade_uf: (colunas[5] || "").trim(),
-            observacao: (colunas[6] || "").trim(),
+            rua: (colunas[2] || "").trim().toUpperCase(),
+            numero: (colunas[3] || "").trim().toUpperCase(),
+            bairro: (colunas[4] || "").trim().toUpperCase(),
+            cidade_uf: (colunas[5] || "").trim().toUpperCase(),
+            vendedor: (colunas[6] || "").trim() || "Não informado",
+            observacao: (colunas[7] || "").trim().toUpperCase(),
             prioridade: "normal",
             status: "pendente",
             ordem: proximaOrdem++,
@@ -671,6 +651,7 @@ if (botaoWhatsapp) {
       const statusIcone = entrega.concluida ? "✅" : "⏳";
       texto += (index + 1) + ". " + statusIcone + " *" + entrega.cliente + "*\n";
       texto += "📍 " + enderecoDa(entrega) + "\n";
+      if (entrega.vendedor) texto += "👤 Vendedor: " + entrega.vendedor + "\n";
       if (entrega.telefone) texto += "📞 " + entrega.telefone + "\n";
       if (entrega.observacao) texto += "📝 " + entrega.observacao + "\n";
       texto += "\n";
