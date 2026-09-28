@@ -53,7 +53,7 @@ function mostrarToast(mensagem, tipo = "sucesso") {
 }
 
 // ==========================================
-// CONTROLE DE SESSÃO E LOGIN
+// CONTROLE DE SESSÃO, LOGIN E MODO MOTORISTA
 // ==========================================
 async function verificarSessao() {
   if (!supabaseClient) return;
@@ -62,10 +62,29 @@ async function verificarSessao() {
   if (session) {
     if (authContainer) authContainer.style.display = "none";
     if (appContainer) appContainer.style.display = "block";
+    
+    // Verifica se o email/usuário logado pertence ao motorista
+    aplicarModoMotoristaPelaSessao(session.user);
+
     await carregarEntregasDoSupabase();
   } else {
     if (authContainer) authContainer.style.display = "block";
     if (appContainer) appContainer.style.display = "none";
+    // Remove a classe do motorista ao sair
+    document.body.classList.remove("modo-motorista");
+  }
+}
+
+function aplicarModoMotoristaPelaSessao(usuario) {
+  if (!usuario || !usuario.email) return;
+  const email = usuario.email.toLowerCase();
+
+  // Se o login contiver "motorista", ativa o modo restrito
+  if (email.includes("motorista")) {
+    document.body.classList.add("modo-motorista");
+    mostrarToast("Modo Motorista ativado: Visualização simplificada.", "sucesso");
+  } else {
+    document.body.classList.remove("modo-motorista");
   }
 }
 
@@ -307,7 +326,7 @@ function limparFormulario() {
 }
 
 // ==========================================
-// FORMULÁRIO DE CADASTRO / EDIÇÃO (Com Caixa Alta Aplicada)
+// FORMULÁRIO DE CADASTRO / EDIÇÃO
 // ==========================================
 if (form) {
   form.addEventListener("submit", async function (evento) {
@@ -432,7 +451,6 @@ document.addEventListener("click", async function (evento) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   } 
-  // Lógica de subir e descer a ordem com as setas (ideal para mobile/iPhone)
   else if (acao === "subir" || acao === "descer") {
     const pendentes = entregasDaData().filter(e => !e.concluida);
     const indexAtual = pendentes.findIndex(e => e.id == id);

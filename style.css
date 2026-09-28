@@ -430,3 +430,11 @@ body {
 input[type="text"], textarea {
     text-transform: uppercase;
 }
+
+/* ========================================== */
+/* MODO MOTORISTA: OCULTA GESTÃO E FORMULÁRIO */
+/* ========================================== */
+body.modo-motorista .secao-formulario,
+body.modo-motorista .secao-ferramentas {
+    display: none !important;
+}
