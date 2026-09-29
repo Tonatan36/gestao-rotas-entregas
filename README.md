@@ -1,43 +1,26 @@
-# 📦 Gestão de Rotas de Entregas
+# 📦 Sistema de Gestão de Rotas de Entrega
 
-Aplicação web responsiva para organizar entregas diárias de forma simples e integrada com a nuvem. Cadastre os pedidos na ordem da rota, acompanhe o progresso e abra cada endereço no Google Maps ou no Waze.
+Aplicação web desenvolvida para otimizar, organizar e gerenciar rotas de entrega diárias, com foco em usabilidade mobile (Android e iOS), padronização de dados e suporte à análise operacional.
 
-## 🚀 Funcionalidades
-
-* **Autenticação Segura:** Login individual para utilizadores integrado via Supabase.
-* **Gestão Completa:** Cadastro de cliente, telefone, endereço, observações e data da rota.
-* **Importação em Lote (CSV):** Carregamento rápido de vários endereços de uma só vez através de planilhas.
-* **Otimização por GPS:** Ordenação inteligente de paradas baseada na geolocalização do dispositivo.
-* **Integração com WhatsApp:** Geração automática e partilha do resumo da rota formatada para o mensageiro.
-* **Organização Flexível:** Botões para subir e descer a sequência de entregas manualmente.
-* **Destaques e Indicadores:** Indicação da próxima entrega e contadores de totais, pendentes e concluídas.
-* **Ações Rápidas:** Edição, exclusão e marcação de entregas como concluídas (com opção de desfazer).
-* **Navegação Integrada:** Abertura direta do endereço no Google Maps ou no Waze.
-* **Interface Responsiva:** Otimizada para computador e telemóvel.
+## 🚀 Sobre o Projeto
+O projeto nasceu da necessidade de digitalizar e simplificar a rotina de entregas, substituindo processos manuais por uma interface ágil e responsiva. O sistema conta com controle de acesso, ordenação otimizada para dispositivos móveis, padronização automática de dados e integração direta com ferramentas de navegação e banco de dados em nuvem.
 
 ## 🛠️ Tecnologias Utilizadas
+* **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
+* **Backend / Autenticação / Banco de Dados:** Supabase
+* **Navegação:** Integração direta com Google Maps e Waze
+* **Hospedagem & Versionamento:** Vercel / Netlify & Git/GitHub
 
-* **HTML5**
-* **CSS3**
-* **JavaScript (Vanilla JS / ES6+)**
-* **Supabase (Backend, Banco de Dados PostgreSQL e Autenticação)**
-* **Hospedagem:** Vercel
+## ✨ Principais Funcionalidades
+* **Autenticação Segura:** Login via Supabase Auth com perfis diferenciados (Gestão vs. Modo Motorista).
+* **Modo Motorista:** Interface simplificada exclusiva para operadores de campo, ocultando formulários de cadastro e ferramentas administrativas para focar apenas nas entregas e no GPS.
+* **CRUD Completo de Entregas:** Adição, edição, exclusão e marcação de status (Pendente / Concluída).
+* **Ordenação Inteligente para Mobile (iOS/Android):** Substituição de drag-and-drop por botões interativos de "Subir/Descer" para evitar travamentos em telemóveis.
+* **Padronização de Dados (Caixa Alta):** Inputs forçados via CSS e JavaScript para garantir consistência em relatórios futuros.
+* **Exportação e Integração:** Exportação de relatórios em formato CSV, links diretos de partilha via WhatsApp e cálculo de rotas.
 
-## 📱 Como Utilizar
+## 📊 Aplicação Prática e Dados
+Os dados estruturados e salvos no banco permitem a extração facilitada para ferramentas de Business Intelligence (como Power BI) e planilhas (LibreOffice / Excel), viabilizando análises de desempenho por bairros, volume de entregas e produtividade dos vendedores.
 
-1. Faça login com as credenciais autorizadas.
-2. Selecione a data desejada ou importe as entregas via ficheiro CSV.
-3. Cadastre novas entregas manualmente ou otimize a ordem usando o GPS.
-4. Use as setas para ajustar a sequência, se preferir.
-5. Na entrega atual, escolha Google Maps ou Waze para navegar.
-6. Ao finalizar, clique em "Entregue" para mover para as concluídas.
-7. Partilhe o resumo da rota com a equipa diretamente pelo WhatsApp.
-
-## 🗂️ Estrutura do Projeto
-
-```text
-.
-├── index.html      # Estrutura e layout da aplicação
-├── style.css       # Estilos e design responsivo
-├── script.js       # Lógica, Supabase, GPS, CSV e WhatsApp
-└── README.md       # Documentação do projeto
+---
+Desenvolvido por **Ewerton Natan** 🚀
