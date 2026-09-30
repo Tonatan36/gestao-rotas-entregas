@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Rotas de Entrega</title>
   <link rel="stylesheet" href="style.css">
+  
+  <!-- Configurações do PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rotas">
+
   <!-- Supabase Client UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -171,6 +179,17 @@
 
   <!-- Contêiner de Notificações (Toasts) -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Script do Service Worker para PWA -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js")
+          .then(function () { console.log("Service Worker registado com sucesso!"); })
+          .catch(function (erro) { console.log("Erro ao registar Service Worker:", erro); });
+      });
+    }
+  </script>
 
   <!-- Script Principal -->
   <script src="script.js"></script>
