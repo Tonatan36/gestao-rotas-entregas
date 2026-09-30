@@ -438,3 +438,15 @@ body.modo-motorista .secao-formulario,
 body.modo-motorista .secao-ferramentas {
     display: none !important;
 }
+
+/* --- Estilo para a logo no cabeçalho --- */
+.logo-cabecalho {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: block; /* Garante que fica acima do título */
+}
