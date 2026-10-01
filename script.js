@@ -63,14 +63,12 @@ async function verificarSessao() {
     if (authContainer) authContainer.style.display = "none";
     if (appContainer) appContainer.style.display = "block";
     
-    // Verifica se o email/usuário logado pertence ao motorista
     aplicarModoMotoristaPelaSessao(session.user);
 
     await carregarEntregasDoSupabase();
   } else {
     if (authContainer) authContainer.style.display = "block";
     if (appContainer) appContainer.style.display = "none";
-    // Remove a classe do motorista ao sair
     document.body.classList.remove("modo-motorista");
   }
 }
@@ -79,7 +77,6 @@ function aplicarModoMotoristaPelaSessao(usuario) {
   if (!usuario || !usuario.email) return;
   const email = usuario.email.toLowerCase();
 
-  // Se o login contiver "motorista", ativa o modo restrito
   if (email.includes("motorista")) {
     document.body.classList.add("modo-motorista");
     mostrarToast("Modo Motorista ativado: Visualização simplificada.", "sucesso");
@@ -96,6 +93,9 @@ if (formLogin) {
     const nomeDigitado = document.querySelector("#loginNome").value.trim().toLowerCase();
     const senha = document.querySelector("#loginSenha").value.trim();
     const emailFicticio = nomeDigitado.replace(/\s+/g, "") + "@rotas.local";
+
+    // Guarda o utilizador logado no localStorage para sabermos quem está ativo
+    localStorage.setItem("usuarioLogado", nomeDigitado);
 
     const { data, error } = await supabaseClient.auth.signInWithPassword({
       email: emailFicticio,
@@ -116,6 +116,7 @@ if (formLogin) {
 
 if (botaoSair) {
   botaoSair.addEventListener("click", async function () {
+    localStorage.removeItem("usuarioLogado");
     await supabaseClient.auth.signOut();
     verificarSessao();
   });
@@ -126,10 +127,20 @@ if (botaoSair) {
 // ==========================================
 async function carregarEntregasDoSupabase() {
   try {
-    const { data, error } = await supabaseClient
+    const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+
+    let query = supabaseClient
       .from("rotas")
       .select("*")
       .order("ordem", { ascending: true });
+
+    // Se quem fez o login for o motorista ou motorista2, filtra apenas as entregas dele
+    if (usuarioLogado === "motorista" || usuarioLogado === "motorista2") {
+      query = query.eq("motorista", usuarioLogado);
+    }
+    // Se for o gestor (ex: ewerton), a query passa direto e traz todas as entregas
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Erro ao carregar do Supabase:", error);
@@ -146,6 +157,7 @@ async function carregarEntregasDoSupabase() {
           bairro: item.bairro,
           cidadeUf: item.cidade_uf,
           vendedor: item.vendedor || "Não informado",
+          motorista: item.motorista || "motorista",
           observacao: item.observacao,
           prioridade: item.prioridade || "normal",
           concluida: item.status === "concluida",
@@ -235,6 +247,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
 
   let telefoneHTML = entrega.telefone ? '<p class="detalhe">Telefone: <a href="tel:' + escaparHTML(telefoneLimpo) + '">' + escaparHTML(entrega.telefone) + "</a></p>" : "";
   let vendedorHTML = '<p class="detalhe"><strong>Vendedor:</strong> ' + escaparHTML(entrega.vendedor) + '</p>';
+  let motoristaHTML = '<p class="detalhe"><strong>Motorista:</strong> ' + escaparHTML(entrega.motorista) + '</p>';
   let observacaoHTML = entrega.observacao ? '<p class="detalhe"><strong>Observação:</strong> ' + escaparHTML(entrega.observacao) + "</p>" : "";
 
   let botoesHTML = "";
@@ -264,6 +277,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
       "</div>" +
       telefoneHTML +
       vendedorHTML +
+      motoristaHTML +
       observacaoHTML +
       '<div class="acoes-entrega">' + botoesHTML + "</div>" +
     "</article>"
@@ -318,6 +332,8 @@ function limparFormulario() {
   if (inputPrioridade) inputPrioridade.value = "normal";
   const inputVendedor = document.querySelector("#vendedor");
   if (inputVendedor) inputVendedor.value = "";
+  const inputMotorista = document.querySelector("#motorista");
+  if (inputMotorista) inputMotorista.value = "";
 
   const botaoSalvar = document.querySelector("#botaoSalvar");
   if (botaoSalvar) botaoSalvar.textContent = "Adicionar à rota";
@@ -340,6 +356,7 @@ if (form) {
       bairro: document.querySelector("#bairro").value.trim().toUpperCase(),
       cidade_uf: document.querySelector("#cidadeUf").value.trim().toUpperCase(),
       vendedor: document.querySelector("#vendedor").value,
+      motorista: document.querySelector("#motorista") ? document.querySelector("#motorista").value : "motorista",
       observacao: document.querySelector("#observacao").value.trim().toUpperCase(),
       prioridade: document.querySelector("#prioridade") ? document.querySelector("#prioridade").value : "normal"
     };
@@ -370,6 +387,7 @@ if (form) {
         bairro: dados.bairro,
         cidade_uf: dados.cidade_uf,
         vendedor: dados.vendedor,
+        motorista: dados.motorista,
         observacao: dados.observacao,
         prioridade: dados.prioridade,
         status: "pendente",
@@ -443,6 +461,9 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#vendedor").value = entrega.vendedor || "";
       document.querySelector("#observacao").value = entrega.observacao || "";
       
+      const inputMotorista = document.querySelector("#motorista");
+      if (inputMotorista) inputMotorista.value = entrega.motorista || "motorista";
+
       const inputPrioridade = document.querySelector("#prioridade");
       if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
 
@@ -545,11 +566,11 @@ function exportarRelatorioCSV() {
     return;
   }
 
-  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Prioridade,Status\n";
+  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Motorista,Prioridade,Status\n";
 
   entregasDoDia.forEach(function (e) {
     const statusTexto = e.concluida ? "Concluída" : "Pendente";
-    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.vendedor || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
+    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.vendedor || ''}","${e.motorista || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
     csvContent += linha + "\r\n";
   });
 
@@ -603,6 +624,7 @@ if (inputCsv) {
             bairro: (colunas[4] || "").trim().toUpperCase(),
             cidade_uf: (colunas[5] || "").trim().toUpperCase(),
             vendedor: (colunas[6] || "").trim() || "Não informado",
+            motorista: "motorista",
             observacao: (colunas[7] || "").trim().toUpperCase(),
             prioridade: "normal",
             status: "pendente",
@@ -670,6 +692,7 @@ if (botaoWhatsapp) {
       texto += (index + 1) + ". " + statusIcone + " *" + entrega.cliente + "*\n";
       texto += "📍 " + enderecoDa(entrega) + "\n";
       if (entrega.vendedor) texto += "👤 Vendedor: " + entrega.vendedor + "\n";
+      if (entrega.motorista) texto += "🚚 Motorista: " + entrega.motorista + "\n";
       if (entrega.telefone) texto += "📞 " + entrega.telefone + "\n";
       if (entrega.observacao) texto += "📝 " + entrega.observacao + "\n";
       texto += "\n";
