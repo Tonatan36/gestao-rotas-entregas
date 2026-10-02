@@ -133,9 +133,13 @@ async function carregarEntregasDoSupabase() {
       .select("*")
       .order("ordem", { ascending: true });
 
-    if (usuarioLogado === "motorista" || usuarioLogado === "motorista2") {
-      query = query.eq("motorista", usuarioLogado);
+    // Filtro restrito para os motoristas 1 e 2 separarem as entregas corretamente
+    if (usuarioLogado === "motorista") {
+      query = query.eq("motorista", "motorista");
+    } else if (usuarioLogado === "motorista2") {
+      query = query.eq("motorista", "motorista2");
     }
+    // Se for o gestor (ex: ewerton), a query passa direto e traz todas as entregas
 
     const { data, error } = await query;
 
@@ -482,11 +486,4 @@ document.addEventListener("click", async function (evento) {
     const itemMovido = pendentes.splice(indexAtual, 1)[0];
     pendentes.splice(indexAlvo, 0, itemMovido);
 
-    for (let i = 0; i < pendentes.length; i++) {
-      await supabaseClient
-        .from("rotas")
-        .update({ ordem: i + 1 })
-        .eq("id", pendentes[i].id);
-    }
-
-    mostrarToast(acao === "subir" ? "Entrega movida para cima! ⬆
+    for (
