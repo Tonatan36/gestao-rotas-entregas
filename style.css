@@ -1,4 +1,4 @@
-se/* ==========================================
+/* ==========================================
    ESTILOS GERAIS E DO APLICATIVO
    ========================================== */
 
@@ -275,7 +275,7 @@ body {
   cursor: default;
 }
 
-/* --- ADIÇÃO: CORES E ESTILOS DE PRIORIDADE INTELIGENTE --- */
+/* --- CORES E ESTILOS DE PRIORIDADE INTELIGENTE --- */
 .entrega.prioridade-urgente {
   border-left: 5px solid #ef4444;
   background-color: #fef2f2;
@@ -313,7 +313,6 @@ body {
   background-color: #d1fae5;
   color: #065f46;
 }
-/* -------------------------------------------------------- */
 
 .entrega-cabecalho {
   display: flex;
@@ -448,7 +447,7 @@ body.modo-motorista .secao-ferramentas {
   margin-bottom: 8px;
   border: 2px solid #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: block; /* Garante que fica acima do título */
+  display: block;
 }
 
 /* Garante que o campo do motorista aparece no formulário */
@@ -456,6 +455,7 @@ body.modo-motorista .secao-ferramentas {
   display: block;
   width: 100%;
 }
+
 /* Garante que os campos de seleção do formulário apareçam sempre para o gestor */
 .app-container:not(.modo-motorista) #formEntrega select {
   display: block !important;
