@@ -1,4 +1,4 @@
-/* ==========================================
+se/* ==========================================
    ESTILOS GERAIS E DO APLICATIVO
    ========================================== */
 
@@ -455,4 +455,9 @@ body.modo-motorista .secao-ferramentas {
 #formEntrega #motorista {
   display: block;
   width: 100%;
+}
+/* Garante que os campos de seleção do formulário apareçam sempre para o gestor */
+.app-container:not(.modo-motorista) #formEntrega select {
+  display: block !important;
+  width: 100% !important;
 }
