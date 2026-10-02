@@ -450,3 +450,9 @@ body.modo-motorista .secao-ferramentas {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: block; /* Garante que fica acima do título */
 }
+
+/* Garante que o campo do motorista aparece no formulário */
+#formEntrega #motorista {
+  display: block;
+  width: 100%;
+}
