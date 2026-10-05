@@ -486,4 +486,14 @@ document.addEventListener("click", async function (evento) {
     const itemMovido = pendentes.splice(indexAtual, 1)[0];
     pendentes.splice(indexAlvo, 0, itemMovido);
 
-    for (
+    for (let i = 0; i < pendentes.length; i++) {
+      await supabaseClient
+        .from("rotas")
+        .update({ ordem: i + 1 })
+        .eq("id", pendentes[i].id);
+    }
+
+    mostrarToast(acao === "subir" ? "Entrega movida para cima! ⬆️" : "Entrega movida para baixo! ⬇️");
+    await carregarEntregasDoSupabase();
+  }
+});
