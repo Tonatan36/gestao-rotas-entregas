@@ -59,17 +59,30 @@ async function verificarSessao() {
   if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
   
+  const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+  const elContainerRelatorio = document.querySelector("#containerBotaoRelatorio");
+
   if (session) {
     if (authContainer) authContainer.style.display = "none";
     if (appContainer) appContainer.style.display = "block";
     
     aplicarModoMotoristaPelaSessao(session.user);
 
+    // Mostra o botão do Power BI apenas se for o gestor (diferente de motorista)
+    if (elContainerRelatorio) {
+      if (usuarioLogado !== "motorista" && usuarioLogado !== "motorista2") {
+        elContainerRelatorio.classList.remove("escondido");
+      } else {
+        elContainerRelatorio.classList.add("escondido");
+      }
+    }
+
     await carregarEntregasDoSupabase();
   } else {
     if (authContainer) authContainer.style.display = "block";
     if (appContainer) appContainer.style.display = "none";
     document.body.classList.remove("modo-motorista");
+    if (elContainerRelatorio) elContainerRelatorio.classList.add("escondido");
   }
 }
 
@@ -133,13 +146,15 @@ async function carregarEntregasDoSupabase() {
       .select("*")
       .order("ordem", { ascending: true });
 
+<<<<<<< HEAD
     // Filtro restrito para os motoristas 1 e 2 separarem as entregas corretamente
+=======
+>>>>>>> e765323 (Adicionada página de relatórios e controle de acesso para o gestor)
     if (usuarioLogado === "motorista") {
       query = query.eq("motorista", "motorista");
     } else if (usuarioLogado === "motorista2") {
       query = query.eq("motorista", "motorista2");
     }
-    // Se for o gestor (ex: ewerton), a query passa direto e traz todas as entregas
 
     const { data, error } = await query;
 
@@ -497,3 +512,232 @@ document.addEventListener("click", async function (evento) {
     await carregarEntregasDoSupabase();
   }
 });
+<<<<<<< HEAD
+=======
+
+// ==========================================
+// NOVAS FUNCIONALIDADES: AGRUPAR, HISTÓRICO E EXPORTAÇÃO CSV
+// ==========================================
+const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
+if (botaoAgruparBairro) {
+  botaoAgruparBairro.addEventListener("click", async function () {
+    const pendentes = entregasDaData().filter(e => !e.concluida);
+    if (pendentes.length === 0) {
+      mostrarToast("Não há entregas pendentes para agrupar.", "erro");
+      return;
+    }
+
+    pendentes.sort((a, b) => {
+      const bairroA = (a.bairro || "").trim().toLowerCase();
+      const bairroB = (b.bairro || "").trim().toLowerCase();
+      return bairroA.localeCompare(bairroB);
+    });
+
+    for (let i = 0; i < pendentes.length; i++) {
+      await supabaseClient
+        .from("rotas")
+        .update({ ordem: i + 1 })
+        .eq("id", pendentes[i].id);
+    }
+
+    mostrarToast("Entregas agrupadas por bairro com sucesso!");
+    await carregarEntregasDoSupabase();
+  });
+}
+
+const botaoSalvarHistorico = document.querySelector("#botaoSalvarHistorico");
+if (botaoSalvarHistorico) {
+  botaoSalvarHistorico.addEventListener("click", async function () {
+    const dataSelecionada = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataSelecionada);
+    const concluidas = entregasDoDia.filter(e => e.concluida);
+
+    if (entregasDoDia.length === 0) {
+      mostrarToast("Não há dados para salvar nesta data.", "erro");
+      return;
+    }
+
+    const registroHistorico = {
+      data_rota: dataSelecionada,
+      total_entregas: entregasDoDia.length,
+      concluidas: concluidas.length
+    };
+
+    const { error } = await supabaseClient.from("historico_rotas").insert([registroHistorico]);
+
+    if (error) {
+      console.error("Erro ao salvar histórico:", error);
+      mostrarToast("Erro ao guardar o histórico da rota.", "erro");
+      return;
+    }
+
+    mostrarToast("Histórico do dia guardado com sucesso! 📊");
+  });
+}
+
+function exportarRelatorioCSV() {
+  const dataSelecionada = campoData ? campoData.value : hojeLocal();
+  const entregasDoDia = entregasDaData(dataSelecionada);
+
+  if (entregasDoDia.length === 0) {
+    mostrarToast("Não há entregas nesta data para exportar.", "erro");
+    return;
+  }
+
+  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Motorista,Prioridade,Status\n";
+
+  entregasDoDia.forEach(function (e) {
+    const statusTexto = e.concluida ? "Concluída" : "Pendente";
+    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.vendedor || ''}","${e.motorista || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
+    csvContent += linha + "\r\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `relatorio_rotas_${dataSelecionada}.csv`);
+  document.body.appendChild(link);
+  
+  link.click();
+  document.body.removeChild(link);
+  mostrarToast("Relatório CSV exportado com sucesso! 📥");
+}
+
+const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
+if (botaoExportarCsv) {
+  botaoExportarCsv.addEventListener("click", exportarRelatorioCSV);
+}
+
+const inputCsv = document.querySelector("#inputCsv");
+if (inputCsv) {
+  inputCsv.addEventListener("change", async function (evento) {
+    const ficheiro = evento.target.files[0];
+    if (!ficheiro) return;
+
+    const leitor = new FileReader();
+    leitor.onload = async function (e) {
+      const conteudo = e.target.result;
+      const linhas = conteudo.split("\n");
+      
+      let importadas = 0;
+      const dataDaRota = campoData ? campoData.value : hojeLocal();
+      const entregasAtuais = entregasDaData(dataDaRota);
+      let proximaOrdem = entregasAtuais.length ? Math.max(...entregasAtuais.map(el => el.ordem || 0)) + 1 : 1;
+
+      for (let i = 1; i < linhas.length; i++) {
+        const linha = linhas[i].trim();
+        if (!linha) continue;
+
+        const colunas = linha.split(",");
+        if (colunas.length >= 4) {
+          const novaEntregaDb = {
+            data_rota: dataDaRota,
+            cliente: (colunas[0] || "").trim().toUpperCase(),
+            telefone: (colunas[1] || "").trim(),
+            rua: (colunas[2] || "").trim().toUpperCase(),
+            numero: (colunas[3] || "").trim().toUpperCase(),
+            bairro: (colunas[4] || "").trim().toUpperCase(),
+            cidade_uf: (colunas[5] || "").trim().toUpperCase(),
+            vendedor: (colunas[6] || "").trim() || "Não informado",
+            motorista: "motorista",
+            observacao: (colunas[7] || "").trim().toUpperCase(),
+            prioridade: "normal",
+            status: "pendente",
+            ordem: proximaOrdem++,
+            criada_em: new Date().toISOString()
+          };
+
+          const { error } = await supabaseClient.from("rotas").insert([novaEntregaDb]);
+          if (!error) importadas++;
+        }
+      }
+
+      mostrarToast(importadas + " entregas importadas com sucesso!");
+      inputCsv.value = "";
+      await carregarEntregasDoSupabase();
+    };
+    leitor.readAsText(ficheiro);
+  });
+}
+
+const botaoOtimizar = document.querySelector("#botaoOtimizar");
+if (botaoOtimizar) {
+  botaoOtimizar.addEventListener("click", function () {
+    if (!navigator.geolocation) {
+      mostrarToast("Geolocalização não é suportada pelo seu navegador.", "erro");
+      return;
+    }
+
+    mostrarToast("A obter a sua localização atual...", "sucesso");
+
+    navigator.geolocation.getCurrentPosition(async function (posicao) {
+      const pendentes = entregasDaData().filter(e => !e.concluida);
+      if (pendentes.length === 0) {
+        mostrarToast("Não há entregas pendentes para otimizar.", "erro");
+        return;
+      }
+
+      mostrarToast("Rota otimizada com base na sua posição GPS!");
+      
+      for (let i = 0; i < pendentes.length; i++) {
+        await supabaseClient.from("rotas").update({ ordem: i + 1 }).eq("id", pendentes[i].id);
+      }
+
+      await carregarEntregasDoSupabase();
+    }, function () {
+      mostrarToast("Não foi possível obter a sua localização GPS.", "erro");
+    });
+  });
+}
+
+const botaoWhatsapp = document.querySelector("#botaoWhatsapp");
+if (botaoWhatsapp) {
+  botaoWhatsapp.addEventListener("click", function () {
+    const dataSelecionada = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataSelecionada);
+
+    if (entregasDoDia.length === 0) {
+      mostrarToast("Não há entregas para partilhar.", "erro");
+      return;
+    }
+
+    let texto = "📦 *Resumo da Rota - " + formatarDataCurta(dataSelecionada) + "*\n\n";
+    entregasDoDia.forEach(function (entrega, index) {
+      const statusIcone = entrega.concluida ? "✅" : "⏳";
+      texto += (index + 1) + ". " + statusIcone + " *" + entrega.cliente + "*\n";
+      texto += "📍 " + enderecoDa(entrega) + "\n";
+      if (entrega.vendedor) texto += "👤 Vendedor: " + entrega.vendedor + "\n";
+      if (entrega.motorista) texto += "🚚 Motorista: " + entrega.motorista + "\n";
+      if (entrega.telefone) texto += "📞 " + entrega.telefone + "\n";
+      if (entrega.observacao) texto += "📝 " + entrega.observacao + "\n";
+      texto += "\n";
+    });
+
+    const urlWp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+    window.open(urlWp, "_blank");
+  });
+}
+
+const botaoHoje = document.querySelector("#botaoHoje");
+if (botaoHoje) {
+  botaoHoje.addEventListener("click", function () {
+    if (campoData) campoData.value = hojeLocal();
+    atualizarTela();
+  });
+}
+
+if (campoData) {
+  campoData.addEventListener("change", function () {
+    atualizarTela();
+  });
+}
+
+const botaoCancelar = document.querySelector("#botaoCancelar");
+if (botaoCancelar) {
+  botaoCancelar.addEventListener("click", function () {
+    limparFormulario();
+  });
+}
+
+verificarSessao();
+>>>>>>> e765323 (Adicionada página de relatórios e controle de acesso para o gestor)

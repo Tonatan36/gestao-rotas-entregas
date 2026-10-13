@@ -160,6 +160,11 @@
 
         <!-- Barra de Ações Avançadas -->
         <div class="acoes-extras">
+          <!-- NOVO: Botão de acesso ao Power BI (Visível apenas para o Gestor via script.js) -->
+          <div id="containerBotaoRelatorio" class="escondido" style="display: inline-block;">
+            <a href="relatorios.html" class="botao-pequeno" style="background-color: #0f172a; color: #fff; text-decoration: none; border-color: #0f172a;">📊 Relatórios Power BI</a>
+          </div>
+
           <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
           <input type="file" id="inputCsv" accept=".csv" style="display: none;">
 
