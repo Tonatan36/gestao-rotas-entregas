@@ -7,19 +7,15 @@ const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 if (!supabaseClient) {
-  console.error("Erro crítico: O script do Supabase não foi carregado corretamente no HTML.");
+  console.error("Erro crítico: O script do Supabase não foi carregado corretamente.");
 }
 
-// Referências da Tela de Login e App
 const authContainer = document.querySelector("#authContainer");
 const appContainer = document.querySelector("#appContainer");
 const formLogin = document.querySelector("#formLogin");
 const msgErroLogin = document.querySelector("#msgErroLogin");
 const botaoSair = document.querySelector("#botaoSair");
 
-// ==========================================
-// VARIÁVEIS E ELEMENTOS DO APP
-// ==========================================
 const form = document.querySelector("#formEntrega");
 const listaPendentes = document.querySelector("#listaPendentes");
 const listaConcluidas = document.querySelector("#listaConcluidas");
@@ -31,9 +27,6 @@ if (campoData) {
   campoData.value = hojeLocal();
 }
 
-// ==========================================
-// SISTEMA DE FEEDBACK VISUAL (TOASTS)
-// ==========================================
 function mostrarToast(mensagem, tipo = "sucesso") {
   const container = document.querySelector("#toastContainer");
   if (!container) return;
@@ -52,9 +45,6 @@ function mostrarToast(mensagem, tipo = "sucesso") {
   }, 3000);
 }
 
-// ==========================================
-// CONTROLE DE SESSÃO, LOGIN E MODO MOTORISTA
-// ==========================================
 async function verificarSessao() {
   if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -68,7 +58,6 @@ async function verificarSessao() {
     
     aplicarModoMotoristaPelaSessao(session.user);
 
-    // Mostra o botão do Power BI apenas se for o gestor (diferente de motorista)
     if (elContainerRelatorio) {
       if (usuarioLogado !== "motorista" && usuarioLogado !== "motorista2") {
         elContainerRelatorio.classList.remove("escondido");
@@ -92,7 +81,6 @@ function aplicarModoMotoristaPelaSessao(usuario) {
 
   if (email.includes("motorista")) {
     document.body.classList.add("modo-motorista");
-    mostrarToast("Modo Motorista ativado: Visualização simplificada.", "sucesso");
   } else {
     document.body.classList.remove("modo-motorista");
   }
@@ -134,9 +122,6 @@ if (botaoSair) {
   });
 }
 
-// ==========================================
-// COMUNICAÇÃO COM O BANCO (SUPABASE)
-// ==========================================
 async function carregarEntregasDoSupabase() {
   try {
     const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
@@ -146,10 +131,6 @@ async function carregarEntregasDoSupabase() {
       .select("*")
       .order("ordem", { ascending: true });
 
-<<<<<<< HEAD
-    // Filtro restrito para os motoristas 1 e 2 separarem as entregas corretamente
-=======
->>>>>>> e765323 (Adicionada página de relatórios e controle de acesso para o gestor)
     if (usuarioLogado === "motorista") {
       query = query.eq("motorista", "motorista");
     } else if (usuarioLogado === "motorista2") {
@@ -176,6 +157,7 @@ async function carregarEntregasDoSupabase() {
           motorista: item.motorista || "motorista",
           observacao: item.observacao,
           prioridade: item.prioridade || "normal",
+          status: item.status || "pendente",
           concluida: item.status === "concluida",
           ordem: item.ordem || 0,
           criadaEm: item.criada_em ? new Date(item.criada_em).getTime() : Date.now()
@@ -190,9 +172,6 @@ async function carregarEntregasDoSupabase() {
   }
 }
 
-// ==========================================
-// FUNÇÕES AUXILIARES E LÓGICA DO APP
-// ==========================================
 function hojeLocal() {
   const agora = new Date();
   const ano = agora.getFullYear();
@@ -234,7 +213,7 @@ function entregasDaData(data) {
     .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
 }
 
-function montarCartao(entrega, indice, totalPendentes, concluida) {
+function montarCartao(entrega, indice, totalAtivas, concluida) {
   const endereco = enderecoDa(entrega);
   const telefoneLimpo = (entrega.telefone || "").replace(/[^\d+]/g, "");
   const idEntrega = entrega.id;
@@ -246,20 +225,32 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
 
   const urlWaze = "https://waze.com/ul?q=" + encodeURIComponent(endereco) + "&navigate=yes";
 
-  let etiqueta;
+  let etiquetaStatus = "";
+  let corStatus = "#3b82f6";
+  if (entrega.status === "separacao") {
+    etiquetaStatus = "📦 Em Separação";
+    corStatus = "#f59e0b";
+  } else if (entrega.status === "rota") {
+    etiquetaStatus = "🚚 Em Rota";
+    corStatus = "#8b5cf6";
+  } else if (entrega.status === "cancelado") {
+    etiquetaStatus = "❌ Cancelado";
+    corStatus = "#ef4444";
+  } else if (entrega.status === "concluida") {
+    etiquetaStatus = "✅ Concluída";
+    corStatus = "#10b981";
+  } else {
+    etiquetaStatus = "⏳ Pendente";
+    corStatus = "#64748b";
+  }
+
+  const badgeStatus = `<span class="etiqueta" style="background-color: ${corStatus}; color: #fff;">${etiquetaStatus}</span>`;
   const textoPrioridade = entrega.prioridade ? entrega.prioridade.charAt(0).toUpperCase() + entrega.prioridade.slice(1) : "Normal";
   const badgePrioridade = `<span class="etiqueta-prioridade">${textoPrioridade}</span>`;
 
-  if (concluida) {
-    etiqueta = '<span class="etiqueta concluida">Concluída</span>' + badgePrioridade;
-  } else if (indice === 0) {
-    etiqueta = '<span class="etiqueta">Próxima entrega</span>' + badgePrioridade;
-  } else {
-    etiqueta = '<span class="etiqueta">Parada ' + (indice + 1) + "</span>" + badgePrioridade;
-  }
-
   const classePrioridade = `prioridade-${entrega.prioridade || 'normal'}`;
-  const classeEntrega = "entrega " + classePrioridade + " " + (!concluida && indice === 0 ? "proxima " : "") + (concluida ? "entrega-finalizada" : "");
+  const isFinalizada = entrega.status === "concluida" || entrega.status === "cancelado";
+  const classeEntrega = "entrega " + classePrioridade + " " + (isFinalizada ? "entrega-finalizada" : "");
 
   let telefoneHTML = entrega.telefone ? '<p class="detalhe">Telefone: <a href="tel:' + escaparHTML(telefoneLimpo) + '">' + escaparHTML(entrega.telefone) + "</a></p>" : "";
   let vendedorHTML = '<p class="detalhe"><strong>Vendedor:</strong> ' + escaparHTML(entrega.vendedor) + '</p>';
@@ -267,19 +258,24 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
   let observacaoHTML = entrega.observacao ? '<p class="detalhe"><strong>Observação:</strong> ' + escaparHTML(entrega.observacao) + "</p>" : "";
 
   let botoesHTML = "";
-  if (concluida) {
-    botoesHTML = '<button type="button" class="botao-pequeno" data-acao="desfazer" data-id="' + idEntrega + '">Voltar para pendentes</button>';
+  if (isFinalizada) {
+    botoesHTML = '<button type="button" class="botao-pequeno" data-acao="mudar-status" data-status="pendente" data-id="' + idEntrega + '">Voltar para pendentes</button>';
   } else {
     botoesHTML =
-      '<div style="display: flex; gap: 8px; margin-bottom: 10px; width: 100%;">' +
-        '<button type="button" class="botao-pequeno" style="flex: 1; background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" data-acao="subir" data-id="' + idEntrega + '">⬆️ Subir</button>' +
-        '<button type="button" class="botao-pequeno" style="flex: 1; background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;" data-acao="descer" data-id="' + idEntrega + '">⬇️ Descer</button>' +
+      '<div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">' +
+        '<button type="button" class="botao-pequeno" style="background-color: #f59e0b; color: #fff;" data-acao="mudar-status" data-status="separacao" data-id="' + idEntrega + '">📦 Separação</button>' +
+        '<button type="button" class="botao-pequeno" style="background-color: #8b5cf6; color: #fff;" data-acao="mudar-status" data-status="rota" data-id="' + idEntrega + '">🚚 Em Rota</button>' +
+        '<button type="button" class="botao-pequeno" style="background-color: #10b981; color: #fff;" data-acao="mudar-status" data-status="concluida" data-id="' + idEntrega + '">✅ Entregue</button>' +
       '</div>' +
-      '<a class="link-mapa" href="' + escaparHTML(urlGoogle.toString()) + '" target="_blank" rel="noopener noreferrer">Google Maps</a>' +
-      '<a class="link-mapa" href="' + escaparHTML(urlWaze) + '" target="_blank" rel="noopener noreferrer">Waze</a>' +
-      '<button type="button" class="botao-pequeno" data-acao="editar" data-id="' + idEntrega + '">Editar</button>' +
-      '<button type="button" class="botao-pequeno botao-marcar" data-acao="concluir" data-id="' + idEntrega + '">Entregue</button>' +
-      '<button type="button" class="botao-pequeno" data-acao="excluir" data-id="' + idEntrega + '">Excluir</button>';
+      '<div style="display: flex; gap: 8px; margin-bottom: 10px; width: 100%;">' +
+        '<a class="link-mapa" href="' + escaparHTML(urlGoogle.toString()) + '" target="_blank" rel="noopener noreferrer" style="flex:1; text-align:center;">Google Maps</a>' +
+        '<a class="link-mapa" href="' + escaparHTML(urlWaze) + '" target="_blank" rel="noopener noreferrer" style="flex:1; text-align:center;">Waze</a>' +
+      '</div>' +
+      '<div style="display: flex; gap: 8px;">' +
+        '<button type="button" class="botao-pequeno" data-acao="editar" data-id="' + idEntrega + '">Editar</button>' +
+        '<button type="button" class="botao-pequeno" style="background-color: #ef4444; color: #fff;" data-acao="mudar-status" data-status="cancelado" data-id="' + idEntrega + '">Cancelar</button>' +
+        '<button type="button" class="botao-pequeno" data-acao="excluir" data-id="' + idEntrega + '">Excluir</button>' +
+      '</div>';
   }
 
   return (
@@ -289,7 +285,7 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
           "<h3>" + escaparHTML(entrega.cliente) + "</h3>" +
           '<p class="endereco">' + escaparHTML(endereco) + "</p>" +
         "</div>" +
-        '<div>' + etiqueta + '</div>' +
+        '<div style="display: flex; gap: 5px; flex-direction: column; align-items: flex-end;">' + badgeStatus + badgePrioridade + '</div>' +
       "</div>" +
       telefoneHTML +
       vendedorHTML +
@@ -303,8 +299,8 @@ function montarCartao(entrega, indice, totalPendentes, concluida) {
 function atualizarTela() {
   const dataSelecionada = (campoData ? campoData.value : "") || hojeLocal();
   const entregasDoDia = entregasDaData(dataSelecionada);
-  const pendentes = entregasDoDia.filter(e => !e.concluida);
-  const concluidas = entregasDoDia.filter(e => e.concluida);
+  const ativas = entregasDoDia.filter(e => e.status !== "concluida" && e.status !== "cancelado");
+  const finalizadas = entregasDoDia.filter(e => e.status === "concluida" || e.status === "cancelado");
 
   const dataPorExtenso = formatarData(dataSelecionada);
   const eHoje = dataSelecionada === hojeLocal();
@@ -316,28 +312,23 @@ function atualizarTela() {
   if (elDataHoje && dataPorExtenso) elDataHoje.textContent = dataPorExtenso.charAt(0).toUpperCase() + dataPorExtenso.slice(1);
 
   if (document.querySelector("#totalEntregas")) document.querySelector("#totalEntregas").textContent = entregasDoDia.length;
-  if (document.querySelector("#totalPendentes")) document.querySelector("#totalPendentes").textContent = pendentes.length;
-  if (document.querySelector("#totalConcluidas")) document.querySelector("#totalConcluidas").textContent = concluidas.length;
-  if (document.querySelector("#contadorConcluidas")) document.querySelector("#contadorConcluidas").textContent = concluidas.length;
+  if (document.querySelector("#totalPendentes")) document.querySelector("#totalPendentes").textContent = ativas.length;
+  if (document.querySelector("#totalConcluidas")) document.querySelector("#totalConcluidas").textContent = finalizadas.length;
+  if (document.querySelector("#contadorConcluidas")) document.querySelector("#contadorConcluidas").textContent = finalizadas.length;
 
   const elAvisoData = document.querySelector("#avisoDataCadastro");
   if (elAvisoData) elAvisoData.textContent = "Novas entregas serão registradas em " + formatarDataCurta(dataSelecionada) + ".";
 
   if (listaPendentes) {
-    if (pendentes.length === 0) {
-      listaPendentes.innerHTML = entregasDoDia.length > 0 ? '<div class="vazio">Rota concluída! 🎉</div>' : '<div class="vazio">Nenhuma entrega em ' + escaparHTML(formatarDataCurta(dataSelecionada)) + ".</div>";
+    if (ativas.length === 0) {
+      listaPendentes.innerHTML = entregasDoDia.length > 0 ? '<div class="vazio">Todas as entregas foram processadas! 🎉</div>' : '<div class="vazio">Nenhuma entrega em ' + escaparHTML(formatarDataCurta(dataSelecionada)) + ".</div>";
     } else {
-      listaPendentes.innerHTML = pendentes.map((e, i) => montarCartao(e, i, pendentes.length, false)).join("");
+      listaPendentes.innerHTML = ativas.map((e, i) => montarCartao(e, i, ativas.length, false)).join("");
     }
   }
 
-  const textoProgresso = document.querySelector("#textoProgresso");
-  if (textoProgresso) {
-    textoProgresso.textContent = entregasDoDia.length === 0 ? "Adicione entregas para começar." : concluidas.length + " de " + entregasDoDia.length + " entregas concluídas.";
-  }
-
   if (listaConcluidas) {
-    listaConcluidas.innerHTML = concluidas.length === 0 ? '<div class="vazio">Não há entregas concluídas nesta data.</div>' : concluidas.map((e, i) => montarCartao(e, i, concluidas.length, true)).join("");
+    listaConcluidas.innerHTML = finalizadas.length === 0 ? '<div class="vazio">Não há entregas finalizadas nesta data.</div>' : finalizadas.map((e, i) => montarCartao(e, i, finalizadas.length, true)).join("");
   }
 }
 
@@ -346,6 +337,8 @@ function limparFormulario() {
   if (campoId) campoId.value = "";
   const inputPrioridade = document.querySelector("#prioridade");
   if (inputPrioridade) inputPrioridade.value = "normal";
+  const inputStatus = document.querySelector("#statusSelect");
+  if (inputStatus) inputStatus.value = "pendente";
   const inputVendedor = document.querySelector("#vendedor");
   if (inputVendedor) inputVendedor.value = "";
   const inputMotorista = document.querySelector("#motorista");
@@ -357,9 +350,6 @@ function limparFormulario() {
   if (botaoCancelar) botaoCancelar.classList.add("escondido");
 }
 
-// ==========================================
-// FORMULÁRIO DE CADASTRO / EDIÇÃO
-// ==========================================
 if (form) {
   form.addEventListener("submit", async function (evento) {
     evento.preventDefault();
@@ -374,7 +364,8 @@ if (form) {
       vendedor: document.querySelector("#vendedor").value,
       motorista: document.querySelector("#motorista") ? document.querySelector("#motorista").value : "motorista",
       observacao: document.querySelector("#observacao").value.trim().toUpperCase(),
-      prioridade: document.querySelector("#prioridade") ? document.querySelector("#prioridade").value : "normal"
+      prioridade: document.querySelector("#prioridade") ? document.querySelector("#prioridade").value : "normal",
+      status: document.querySelector("#statusSelect") ? document.querySelector("#statusSelect").value : "pendente"
     };
 
     const idEdicao = campoId ? campoId.value.trim() : "";
@@ -406,7 +397,7 @@ if (form) {
         motorista: dados.motorista,
         observacao: dados.observacao,
         prioridade: dados.prioridade,
-        status: "pendente",
+        status: dados.status,
         ordem: maiorOrdem + 1,
         criada_em: new Date().toISOString()
       };
@@ -425,9 +416,6 @@ if (form) {
   });
 }
 
-// ==========================================
-// AÇÕES NOS CARDS (DELEGAÇÃO GLOBAL DE CLIQUES)
-// ==========================================
 document.addEventListener("click", async function (evento) {
   const botao = evento.target.closest("button[data-acao]");
   if (!botao) return;
@@ -435,34 +423,28 @@ document.addEventListener("click", async function (evento) {
   const acao = botao.getAttribute("data-acao");
   const rawId = botao.getAttribute("data-id");
 
-  if (!rawId) {
-    console.error("Erro: Botão clicado não possui o atributo data-id válido.");
-    return;
-  }
-
+  if (!rawId) return;
   const id = /^\d+$/.test(rawId) ? Number(rawId) : rawId;
 
   if (acao === "excluir") {
     if (confirm("Deseja realmente excluir esta entrega?")) {
       const { error } = await supabaseClient.from("rotas").delete().eq("id", id);
       if (error) {
-        console.error("Erro detalhado ao excluir:", error);
         mostrarToast("Erro ao excluir entrega.", "erro");
         return;
       }
       mostrarToast("Entrega excluída com sucesso.");
       await carregarEntregasDoSupabase();
     }
-  } else if (acao === "concluir" || acao === "desfazer") {
-    const novoStatus = acao === "concluir" ? "concluida" : "pendente";
+  } else if (acao === "mudar-status") {
+    const novoStatus = botao.getAttribute("data-status");
 
     const { error } = await supabaseClient.from("rotas").update({ status: novoStatus }).eq("id", id);
     if (error) {
-      console.error("Erro ao alterar status:", error);
-      mostrarToast("Erro ao atualizar status da entrega.", "erro");
+      mostrarToast("Erro ao atualizar o status.", "erro");
       return;
     }
-    mostrarToast(acao === "concluir" ? "Marcada como entregue! 🎉" : "Retornada para pendentes.");
+    mostrarToast("Status atualizado para: " + novoStatus.toUpperCase());
     await carregarEntregasDoSupabase();
   } else if (acao === "editar") {
     const entrega = entregas.find(e => e.id == id);
@@ -483,261 +465,14 @@ document.addEventListener("click", async function (evento) {
       const inputPrioridade = document.querySelector("#prioridade");
       if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
 
+      const inputStatus = document.querySelector("#statusSelect");
+      if (inputStatus) inputStatus.value = entrega.status || "pendente";
+
       document.querySelector("#botaoSalvar").textContent = "Salvar alterações";
       document.querySelector("#botaoCancelar").classList.remove("escondido");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  } 
-  else if (acao === "subir" || acao === "descer") {
-    const pendentes = entregasDaData().filter(e => !e.concluida);
-    const indexAtual = pendentes.findIndex(e => e.id == id);
-
-    if (indexAtual === -1) return;
-
-    let indexAlvo = acao === "subir" ? indexAtual - 1 : indexAtual + 1;
-
-    if (indexAlvo < 0 || indexAlvo >= pendentes.length) return;
-
-    const itemMovido = pendentes.splice(indexAtual, 1)[0];
-    pendentes.splice(indexAlvo, 0, itemMovido);
-
-    for (let i = 0; i < pendentes.length; i++) {
-      await supabaseClient
-        .from("rotas")
-        .update({ ordem: i + 1 })
-        .eq("id", pendentes[i].id);
-    }
-
-    mostrarToast(acao === "subir" ? "Entrega movida para cima! ⬆️" : "Entrega movida para baixo! ⬇️");
-    await carregarEntregasDoSupabase();
   }
 });
-<<<<<<< HEAD
-=======
-
-// ==========================================
-// NOVAS FUNCIONALIDADES: AGRUPAR, HISTÓRICO E EXPORTAÇÃO CSV
-// ==========================================
-const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
-if (botaoAgruparBairro) {
-  botaoAgruparBairro.addEventListener("click", async function () {
-    const pendentes = entregasDaData().filter(e => !e.concluida);
-    if (pendentes.length === 0) {
-      mostrarToast("Não há entregas pendentes para agrupar.", "erro");
-      return;
-    }
-
-    pendentes.sort((a, b) => {
-      const bairroA = (a.bairro || "").trim().toLowerCase();
-      const bairroB = (b.bairro || "").trim().toLowerCase();
-      return bairroA.localeCompare(bairroB);
-    });
-
-    for (let i = 0; i < pendentes.length; i++) {
-      await supabaseClient
-        .from("rotas")
-        .update({ ordem: i + 1 })
-        .eq("id", pendentes[i].id);
-    }
-
-    mostrarToast("Entregas agrupadas por bairro com sucesso!");
-    await carregarEntregasDoSupabase();
-  });
-}
-
-const botaoSalvarHistorico = document.querySelector("#botaoSalvarHistorico");
-if (botaoSalvarHistorico) {
-  botaoSalvarHistorico.addEventListener("click", async function () {
-    const dataSelecionada = campoData ? campoData.value : hojeLocal();
-    const entregasDoDia = entregasDaData(dataSelecionada);
-    const concluidas = entregasDoDia.filter(e => e.concluida);
-
-    if (entregasDoDia.length === 0) {
-      mostrarToast("Não há dados para salvar nesta data.", "erro");
-      return;
-    }
-
-    const registroHistorico = {
-      data_rota: dataSelecionada,
-      total_entregas: entregasDoDia.length,
-      concluidas: concluidas.length
-    };
-
-    const { error } = await supabaseClient.from("historico_rotas").insert([registroHistorico]);
-
-    if (error) {
-      console.error("Erro ao salvar histórico:", error);
-      mostrarToast("Erro ao guardar o histórico da rota.", "erro");
-      return;
-    }
-
-    mostrarToast("Histórico do dia guardado com sucesso! 📊");
-  });
-}
-
-function exportarRelatorioCSV() {
-  const dataSelecionada = campoData ? campoData.value : hojeLocal();
-  const entregasDoDia = entregasDaData(dataSelecionada);
-
-  if (entregasDoDia.length === 0) {
-    mostrarToast("Não há entregas nesta data para exportar.", "erro");
-    return;
-  }
-
-  let csvContent = "data:text/csv;charset=utf-8,ID,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Motorista,Prioridade,Status\n";
-
-  entregasDoDia.forEach(function (e) {
-    const statusTexto = e.concluida ? "Concluída" : "Pendente";
-    const linha = `"${e.id}","${e.cliente || ''}","${e.telefone || ''}","${e.rua || ''}","${e.numero || ''}","${e.bairro || ''}","${e.cidadeUf || ''}","${e.vendedor || ''}","${e.motorista || ''}","${e.prioridade || 'normal'}","${statusTexto}"`;
-    csvContent += linha + "\r\n";
-  });
-
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `relatorio_rotas_${dataSelecionada}.csv`);
-  document.body.appendChild(link);
-  
-  link.click();
-  document.body.removeChild(link);
-  mostrarToast("Relatório CSV exportado com sucesso! 📥");
-}
-
-const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
-if (botaoExportarCsv) {
-  botaoExportarCsv.addEventListener("click", exportarRelatorioCSV);
-}
-
-const inputCsv = document.querySelector("#inputCsv");
-if (inputCsv) {
-  inputCsv.addEventListener("change", async function (evento) {
-    const ficheiro = evento.target.files[0];
-    if (!ficheiro) return;
-
-    const leitor = new FileReader();
-    leitor.onload = async function (e) {
-      const conteudo = e.target.result;
-      const linhas = conteudo.split("\n");
-      
-      let importadas = 0;
-      const dataDaRota = campoData ? campoData.value : hojeLocal();
-      const entregasAtuais = entregasDaData(dataDaRota);
-      let proximaOrdem = entregasAtuais.length ? Math.max(...entregasAtuais.map(el => el.ordem || 0)) + 1 : 1;
-
-      for (let i = 1; i < linhas.length; i++) {
-        const linha = linhas[i].trim();
-        if (!linha) continue;
-
-        const colunas = linha.split(",");
-        if (colunas.length >= 4) {
-          const novaEntregaDb = {
-            data_rota: dataDaRota,
-            cliente: (colunas[0] || "").trim().toUpperCase(),
-            telefone: (colunas[1] || "").trim(),
-            rua: (colunas[2] || "").trim().toUpperCase(),
-            numero: (colunas[3] || "").trim().toUpperCase(),
-            bairro: (colunas[4] || "").trim().toUpperCase(),
-            cidade_uf: (colunas[5] || "").trim().toUpperCase(),
-            vendedor: (colunas[6] || "").trim() || "Não informado",
-            motorista: "motorista",
-            observacao: (colunas[7] || "").trim().toUpperCase(),
-            prioridade: "normal",
-            status: "pendente",
-            ordem: proximaOrdem++,
-            criada_em: new Date().toISOString()
-          };
-
-          const { error } = await supabaseClient.from("rotas").insert([novaEntregaDb]);
-          if (!error) importadas++;
-        }
-      }
-
-      mostrarToast(importadas + " entregas importadas com sucesso!");
-      inputCsv.value = "";
-      await carregarEntregasDoSupabase();
-    };
-    leitor.readAsText(ficheiro);
-  });
-}
-
-const botaoOtimizar = document.querySelector("#botaoOtimizar");
-if (botaoOtimizar) {
-  botaoOtimizar.addEventListener("click", function () {
-    if (!navigator.geolocation) {
-      mostrarToast("Geolocalização não é suportada pelo seu navegador.", "erro");
-      return;
-    }
-
-    mostrarToast("A obter a sua localização atual...", "sucesso");
-
-    navigator.geolocation.getCurrentPosition(async function (posicao) {
-      const pendentes = entregasDaData().filter(e => !e.concluida);
-      if (pendentes.length === 0) {
-        mostrarToast("Não há entregas pendentes para otimizar.", "erro");
-        return;
-      }
-
-      mostrarToast("Rota otimizada com base na sua posição GPS!");
-      
-      for (let i = 0; i < pendentes.length; i++) {
-        await supabaseClient.from("rotas").update({ ordem: i + 1 }).eq("id", pendentes[i].id);
-      }
-
-      await carregarEntregasDoSupabase();
-    }, function () {
-      mostrarToast("Não foi possível obter a sua localização GPS.", "erro");
-    });
-  });
-}
-
-const botaoWhatsapp = document.querySelector("#botaoWhatsapp");
-if (botaoWhatsapp) {
-  botaoWhatsapp.addEventListener("click", function () {
-    const dataSelecionada = campoData ? campoData.value : hojeLocal();
-    const entregasDoDia = entregasDaData(dataSelecionada);
-
-    if (entregasDoDia.length === 0) {
-      mostrarToast("Não há entregas para partilhar.", "erro");
-      return;
-    }
-
-    let texto = "📦 *Resumo da Rota - " + formatarDataCurta(dataSelecionada) + "*\n\n";
-    entregasDoDia.forEach(function (entrega, index) {
-      const statusIcone = entrega.concluida ? "✅" : "⏳";
-      texto += (index + 1) + ". " + statusIcone + " *" + entrega.cliente + "*\n";
-      texto += "📍 " + enderecoDa(entrega) + "\n";
-      if (entrega.vendedor) texto += "👤 Vendedor: " + entrega.vendedor + "\n";
-      if (entrega.motorista) texto += "🚚 Motorista: " + entrega.motorista + "\n";
-      if (entrega.telefone) texto += "📞 " + entrega.telefone + "\n";
-      if (entrega.observacao) texto += "📝 " + entrega.observacao + "\n";
-      texto += "\n";
-    });
-
-    const urlWp = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
-    window.open(urlWp, "_blank");
-  });
-}
-
-const botaoHoje = document.querySelector("#botaoHoje");
-if (botaoHoje) {
-  botaoHoje.addEventListener("click", function () {
-    if (campoData) campoData.value = hojeLocal();
-    atualizarTela();
-  });
-}
-
-if (campoData) {
-  campoData.addEventListener("change", function () {
-    atualizarTela();
-  });
-}
-
-const botaoCancelar = document.querySelector("#botaoCancelar");
-if (botaoCancelar) {
-  botaoCancelar.addEventListener("click", function () {
-    limparFormulario();
-  });
-}
 
 verificarSessao();
->>>>>>> e765323 (Adicionada página de relatórios e controle de acesso para o gestor)
