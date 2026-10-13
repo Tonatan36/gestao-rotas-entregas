@@ -127,6 +127,17 @@
             </select>
           </div>
 
+          <!-- Campo de Status Operacional -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="statusSelect">Status Operacional *</label>
+            <select id="statusSelect">
+              <option value="pendente">Pendente (Aguardando)</option>
+              <option value="separacao">Em Separação (Armazém)</option>
+              <option value="rota">Em Rota (Com o Motorista)</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+
           <!-- Campo de Prioridade / Alerta Inteligente -->
           <div class="grupo-formulario" style="margin-top: 10px;">
             <label for="prioridade">Nível de Prioridade / Urgência</label>
@@ -160,47 +171,42 @@
 
         <!-- Barra de Ações Avançadas -->
         <div class="acoes-extras">
-          <!-- NOVO: Botão de acesso ao Power BI (Visível apenas para o Gestor via script.js) -->
+          <!-- Botão de acesso ao Power BI / Relatórios (Visível apenas para o Gestor) -->
           <div id="containerBotaoRelatorio" class="escondido" style="display: inline-block;">
-            <a href="relatorio.html" class="botao-pequeno" style="background-color: #0f172a; color: #fff; text-decoration: none; border-color: #0f172a;">📊 Relatórios Power BI</a>
+            <a href="relatorio.html" class="botao-pequeno" style="background-color: #0f172a; color: #fff; text-decoration: none; border-color: #0f172a;">📊 Relatórios BI</a>
           </div>
 
           <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
           <input type="file" id="inputCsv" accept=".csv" style="display: none;">
 
-          <!-- Botão de Exportar Relatório CSV -->
           <button type="button" id="botaoExportarCsv" class="botao-pequeno" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;">📥 Exportar CSV</button>
-
           <button type="button" id="botaoOtimizar" class="botao-pequeno">📍 Otimizar GPS</button>
           <button type="button" id="botaoWhatsapp" class="botao-pequeno">💬 Partilhar WhatsApp</button>
-          
           <button type="button" id="botaoAgruparBairro" class="botao-pequeno">📦 Agrupar por Bairro</button>
           <button type="button" id="botaoSalvarHistorico" class="botao-pequeno">💾 Salvar Histórico</button>
         </div>
       </section>
 
-      <!-- Lista de Entregas Pendentes -->
+      <!-- Lista de Entregas Pendentes / Em Andamento -->
       <section class="secao-lista">
-        <h2>Entregas Pendentes</h2>
+        <h2>Entregas em Andamento</h2>
         <div id="listaPendentes" class="lista-cards">
-          <!-- Os cards das entregas entram aqui via JavaScript -->
+          <!-- Cards entram aqui -->
         </div>
       </section>
 
-      <!-- Lista de Entregas Concluídas -->
+      <!-- Lista de Entregas Concluídas / Canceladas -->
       <section class="secao-lista">
-        <h2>Concluídas (<span id="contadorConcluidas">0</span>)</h2>
+        <h2>Concluídas & Canceladas (<span id="contadorConcluidas">0</span>)</h2>
         <div id="listaConcluidas" class="lista-cards concluidas">
-          <!-- As entregas concluídas entram aqui via JavaScript -->
+          <!-- Cards concluídos entram aqui -->
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Contêiner de Notificações (Toasts) -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- Script do Service Worker para PWA -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
@@ -211,8 +217,6 @@
     }
   </script>
 
-  <!-- Script Principal -->
   <script src="script.js"></script>
 </body>
-  </html>
-  
+</html>
