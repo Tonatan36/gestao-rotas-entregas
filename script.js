@@ -490,3 +490,26 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#telefone").value = entrega.telefone || "";
       document.querySelector("#rua").value = entrega.rua;
       document.querySele
+document.querySelector("#numero").value = entrega.numero;
+      document.querySelector("#bairro").value = entrega.bairro;
+      document.querySelector("#cidadeUf").value = entrega.cidadeUf;
+      document.querySelector("#vendedor").value = entrega.vendedor || "";
+      document.querySelector("#observacao").value = entrega.observacao || "";
+      
+      const inputMotorista = document.querySelector("#motorista");
+      if (inputMotorista) inputMotorista.value = entrega.motorista || "motorista";
+
+      const inputPrioridade = document.querySelector("#prioridade");
+      if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
+
+      const inputStatus = document.querySelector("#statusSelect");
+      if (inputStatus) inputStatus.value = entrega.status || "pendente";
+
+      document.querySelector("#botaoSalvar").textContent = "Salvar alterações";
+      document.querySelector("#botaoCancelar").classList.remove("escondido");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+});
+
+verificarSessao();
