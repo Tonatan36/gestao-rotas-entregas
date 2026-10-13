@@ -3,32 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AçoForte - Relatórios e Power BI</title>
+  <title>AçoForte - Relatórios e BI</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Chart.js para gráficos interativos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase Client UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-  <div class="app-container">
-    <header class="cabecalho-app">
-      <div class="topo-acoes">
-        <h1>Indicadores de Desempenho</h1>
-        <a href="index.html" class="botao-pequeno">Voltar para a Rota</a>
+<body style="background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px;">
+
+  <div class="app-container" style="max-width: 1200px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+    
+    <!-- Cabeçalho -->
+    <header class="cabecalho-app" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px;">
+      <div>
+        <h1 style="margin: 0; color: #0f172a; font-size: 24px;">📊 AçoForte - Painel de BI & Relatórios</h1>
+        <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Indicadores de desempenho operacional e análise de entregas.</p>
       </div>
+      <a href="index.html" class="botao-pequeno" style="text-decoration: none; padding: 10px 18px; background-color: #334155; color: #fff; border-radius: 6px; font-weight: 600;">Voltar para a Rota</a>
     </header>
 
-    <main class="secao-lista">
-      <h2>Dashboard Operacional</h2>
-      <div style="width: 100%; height: 600px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1;">
-        <!-- Aqui entra o link de incorporação (iframe) do seu Power BI -->
-        <iframe 
-          title="Relatorio_Rotas_AcoForte" 
-          width="100%" 
-          height="100%" 
-          src="COLOQUE_O_LINK_DE_INCORPORACAO_DO_POWER_BI_AQUI" 
-          frameborder="0" 
-          allowFullScreen="true">
-        </iframe>
-      </div>
+    <main class="conteudo-principal">
+      
+      <!-- Seção de Gráficos Nativos (Chart.js) -->
+      <section style="margin-bottom: 30px;">
+        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Métricas Rápidas</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+          
+          <!-- Gráfico de Rosca: Status das Entregas -->
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <h3 style="font-size: 14px; color: #475569; margin-top: 0; text-align: center;">Status das Entregas</h3>
+            <div style="position: relative; height: 220px; display: flex; justify-content: center;">
+              <canvas id="graficoStatus"></canvas>
+            </div>
+          </div>
+
+          <!-- Gráfico de Barras: Entregas por Prioridade -->
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <h3 style="font-size: 14px; color: #475569; margin-top: 0; text-align: center;">Distribuição por Prioridade</h3>
+            <div style="position: relative; height: 220px; display: flex; justify-content: center;">
+              <canvas id="graficoPrioridade"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Seção do Power BI Incorporado -->
+      <section class="secao-lista">
+        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 10px;">Dashboard Avançado (Power BI)</h2>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Acompanhe o painel analítico completo conectado ao banco de dados.</p>
+        
+        <div style="width: 100%; height: 550px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #fff;">
+          <!-- Substitua o src abaixo pelo link do seu Power BI Service -->
+          <iframe 
+            title="Relatorio_Rotas_AcoForte" 
+            width="100%" 
+            height="100%" 
+            src="COLOQUE_O_LINK_DE_INCORPORACAO_DO_POWER_BI_AQUI" 
+            frameborder="0" 
+            allowFullScreen="true">
+          </iframe>
+        </div>
+      </section>
+
     </main>
   </div>
+
+  <!-- Script de Proteção e Carga de Dados para os Gráficos -->
+  <script>
+    // 1. Proteção de Acesso (Apenas Gestor)
+    const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+    if (usuarioLogado === "motorista" || usuarioLogado === "motorista2") {
+      alert("Acesso restrito apenas ao gestor.");
+      window.location.href = "index.html";
+    }
+
+    // 2. Configuração do Supabase para buscar dados reais para o Chart.js
+    const SUPABASE_URL = "https://hzgrulwdktmkgnxggsum.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    async function carregarDadosParaGraficos() {
+      if (!supabaseClient) return;
+
+      const { data, error } = await supabaseClient.from("rotas").select("*");
+      if (error) {
+        console.error("Erro ao buscar dados para os gráficos:", error);
+        return;
+      }
+
+      const totalConcluidas = data.filter(e => e.status === "concluida").length;
+      const totalPendentes = data.filter(e => e.status !== "concluida").length;
+
+      const prioridades = { normal: 0, moderada: 0, urgente: 0 };
+      data.forEach(e => {
+        const p = e.prioridade || "normal";
+        if (prioridades[p] !== undefined) prioridades[p]++;
+      });
+
+      // Renderizar Gráfico de Rosca (Status)
+      const ctxStatus = document.getElementById("graficoStatus").getContext("2d");
+      new Chart(ctxStatus, {
+        type: "doughnut",
+        data: {
+          labels: ["Pendentes", "Concluídas"],
+          datasets: [{
+            data: [totalPendentes, totalConcluidas],
+            backgroundColor: ["#f59e0b", "#10b981"],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      // Renderizar Gráfico de Barras (Prioridades)
+      const ctxPrioridade = document.getElementById("graficoPrioridade").getContext("2d");
+      new Chart(ctxPrioridade, {
+        type: "bar",
+        data: {
+          labels: ["Normal", "Moderada", "Urgente"],
+          datasets: [{
+            label: "Nº de Pedidos",
+            data: [prioridades.normal, prioridades.moderada, prioridades.urgente],
+            backgroundColor: ["#3b82f6", "#eab308", "#ef4444"],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
+        }
+      });
+    }
+
+    carregarDadosParaGraficos();
+  </script>
 </body>
 </html>
