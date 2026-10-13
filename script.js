@@ -416,6 +416,42 @@ if (form) {
   });
 }
 
+// Botão de Otimização de Rota (Agrupamento por Bairro e Prioridade)
+const botaoOtimizar = document.querySelector("#botaoOtimizar");
+if (botaoOtimizar) {
+  botaoOtimizar.addEventListener("click", async function () {
+    const dataAtual = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataAtual);
+
+    if (entregasDoDia.length <= 1) {
+      mostrarToast("Não há entregas suficientes para otimizar.", "erro");
+      return;
+    }
+
+    const prioridadePeso = { urgente: 1, moderada: 2, normal: 3 };
+
+    entregasDoDia.sort(function (a, b) {
+      const bairroA = (a.bairro || "").trim().toLowerCase();
+      const bairroB = (b.bairro || "").trim().toLowerCase();
+      if (bairroA !== bairroB) {
+        return bairroA.localeCompare(bairroB);
+      }
+      return (prioridadePeso[a.prioridade] || 3) - (prioridadePeso[b.prioridade] || 3);
+    });
+
+    for (let i = 0; i < entregasDoDia.length; i++) {
+      const item = entregasDoDia[i];
+      await supabaseClient
+        .from("rotas")
+        .update({ ordem: i + 1 })
+        .eq("id", item.id);
+    }
+
+    mostrarToast("Rota otimizada por bairro e prioridade com sucesso! 📍");
+    await carregarEntregasDoSupabase();
+  });
+}
+
 document.addEventListener("click", async function (evento) {
   const botao = evento.target.closest("button[data-acao]");
   if (!botao) return;
@@ -453,26 +489,4 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#cliente").value = entrega.cliente;
       document.querySelector("#telefone").value = entrega.telefone || "";
       document.querySelector("#rua").value = entrega.rua;
-      document.querySelector("#numero").value = entrega.numero;
-      document.querySelector("#bairro").value = entrega.bairro;
-      document.querySelector("#cidadeUf").value = entrega.cidadeUf;
-      document.querySelector("#vendedor").value = entrega.vendedor || "";
-      document.querySelector("#observacao").value = entrega.observacao || "";
-      
-      const inputMotorista = document.querySelector("#motorista");
-      if (inputMotorista) inputMotorista.value = entrega.motorista || "motorista";
-
-      const inputPrioridade = document.querySelector("#prioridade");
-      if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
-
-      const inputStatus = document.querySelector("#statusSelect");
-      if (inputStatus) inputStatus.value = entrega.status || "pendente";
-
-      document.querySelector("#botaoSalvar").textContent = "Salvar alterações";
-      document.querySelector("#botaoCancelar").classList.remove("escondido");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }
-});
-
-verificarSessao();
+      document.querySele
