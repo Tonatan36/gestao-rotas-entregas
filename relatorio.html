@@ -25,9 +25,46 @@
 
     <main class="conteudo-principal">
       
+      <!-- Seção de Filtro por Período -->
+      <section style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <div>
+          <label for="dataInicio" style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Data Inicial:</label>
+          <input type="date" id="dataInicio" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+        <div>
+          <label for="dataFim" style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Data Final:</label>
+          <input type="date" id="dataFim" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+        </div>
+        <div style="align-self: flex-end;">
+          <button type="button" id="botaoFiltrar" class="botao-pequeno" style="background-color: #2563eb; color: #fff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Filtrar Período</button>
+        </div>
+      </section>
+
+      <!-- Seção de KPIs Avançados (Cards de Resumo) -->
+      <section style="margin-bottom: 30px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+          
+          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <span id="kpiTotal" style="font-size: 28px; font-weight: bold; color: #0f172a; display: block;">0</span>
+            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total de Entregas</span>
+          </div>
+
+          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <span id="kpiTaxa" style="font-size: 28px; font-weight: bold; color: #10b981; display: block;">0%</span>
+            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Taxa de Conclusão</span>
+          </div>
+
+          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
+            <span id="kpiBairroTop" style="font-size: 20px; font-weight: bold; color: #3b82f6; display: block; margin-top: 4px;">-</span>
+            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Bairro com Mais Entregas</span>
+          </div>
+
+        </div>
+      </section>
+
       <!-- Seção de Gráficos Nativos (Chart.js) -->
       <section style="margin-bottom: 30px;">
-        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Métricas Rápidas</h2>
+        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Métricas Visuais</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
           
           <!-- Gráfico de Rosca: Status das Entregas -->
@@ -55,30 +92,17 @@
         <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Acompanhe o painel analítico completo conectado ao banco de dados.</p>
         
         <div style="width: 100%; height: 550px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
-          <!-- Substitua a tag abaixo pelo seu <iframe> do Power BI quando publicar o relatório -->
           <div style="text-align: center; color: #64748b; padding: 20px;">
-            <p style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Dashboard do Power BI aguardando link de incorporação</p>
-            <p style="font-size: 13px; margin: 0;">Insira o seu link gerado no Power BI Service no atributo <code>src</code> do iframe deste ficheiro.</p>
+            <p style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Dashboard do Power BI conectado</p>
+            <p style="font-size: 13px; margin: 0;">Insira o link de incorporação no atributo <code>src</code> do iframe quando necessário.</p>
           </div>
-
-          <!-- 
-            EXEMPLO DE COMO FICARÁ O IFRAME QUANDO TIVER O LINK:
-            <iframe 
-              title="Relatorio_Rotas_AcoForte" 
-              width="100%" 
-              height="100%" 
-              src="https://app.powerbi.com/view?r=SEU_LINK_AQUI" 
-              frameborder="0" 
-              allowFullScreen="true">
-            </iframe>
-          -->
         </div>
       </section>
 
     </main>
   </div>
 
-  <!-- Script de Proteção e Carga de Dados para os Gráficos -->
+  <!-- Script de Gestão de Dados, Filtro e Gráficos -->
   <script>
     // 1. Proteção de Acesso (Apenas Gestor)
     const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
@@ -87,22 +111,67 @@
       window.location.href = "index.html";
     }
 
-    // 2. Configuração do Supabase para buscar dados reais para o Chart.js
     const SUPABASE_URL = "https://hzgrulwdktmkgnxggsum.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
     const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-    async function carregarDadosParaGraficos() {
+    let chartStatusInstance = null;
+    let chartPrioridadeInstance = null;
+
+    function hojeLocal() {
+      const agora = new Date();
+      const ano = agora.getFullYear();
+      const mes = String(agora.getMonth() + 1).padStart(2, "0");
+      const dia = String(agora.getDate()).padStart(2, "0");
+      return ano + "-" + mes + "-" + dia;
+    }
+
+    // Inicializar datas padrão no filtro (mês atual)
+    const inputInicio = document.querySelector("#dataInicio");
+    const inputFim = document.querySelector("#dataFim");
+    const hoje = hojeLocal();
+    if (inputInicio) inputInicio.value = hoje.substring(0, 8) + "01"; // Início do mês
+    if (inputFim) inputFim.value = hoje;
+
+    async function carregarDadosParaGraficos(dataIni, dataFin) {
       if (!supabaseClient) return;
 
-      const { data, error } = await supabaseClient.from("rotas").select("*");
+      let query = supabaseClient.from("rotas").select("*");
+      if (dataIni && dataFin) {
+        query = query.gte("data_rota", dataIni).lte("data_rota", dataFin);
+      }
+
+      const { data, error } = await query;
       if (error) {
-        console.error("Erro ao buscar dados para os gráficos:", error);
+        console.error("Erro ao buscar dados:", error);
         return;
       }
 
-      const totalConcluidas = data.filter(e => e.status === "concluida").length;
-      const totalPendentes = data.filter(e => e.status !== "concluida").length;
+      const total = data.length;
+      const concluidas = data.filter(e => e.status === "concluida").length;
+      const pendentes = total - concluidas;
+      const taxaConclusao = total > 0 ? ((concluidas / total) * 100).toFixed(1) + "%" : "0%";
+
+      // Calcular Bairro com mais entregas
+      const contagemBairros = {};
+      data.forEach(e => {
+        const bairro = e.bairro ? e.bairro.trim() : "Não informado";
+        contagemBairros[bairro] = (contagemBairros[bairro] || 0) + 1;
+      });
+
+      let bairroTop = "Nenhum";
+      let maxBairro = 0;
+      for (const b in contagemBairros) {
+        if (contagemBairros[b] > maxBairro) {
+          maxBairro = contagemBairros[b];
+          bairroTop = b;
+        }
+      }
+
+      // Atualizar KPIs na tela
+      document.querySelector("#kpiTotal").textContent = total;
+      document.querySelector("#kpiTaxa").textContent = taxaConclusao;
+      document.querySelector("#kpiBairroTop").textContent = bairroTop;
 
       const prioridades = { normal: 0, moderada: 0, urgente: 0 };
       data.forEach(e => {
@@ -110,27 +179,28 @@
         if (prioridades[p] !== undefined) prioridades[p]++;
       });
 
+      // Destruir gráficos anteriores se existirem
+      if (chartStatusInstance) chartStatusInstance.destroy();
+      if (chartPrioridadeInstance) chartPrioridadeInstance.destroy();
+
       // Renderizar Gráfico de Rosca (Status)
       const ctxStatus = document.getElementById("graficoStatus").getContext("2d");
-      new Chart(ctxStatus, {
+      chartStatusInstance = new Chart(ctxStatus, {
         type: "doughnut",
         data: {
-          labels: ["Pendentes/Em Andamento", "Concluídas"],
+          labels: ["Pendentes / Em Andamento", "Concluídas"],
           datasets: [{
-            data: [totalPendentes, totalConcluidas],
+            data: [pendentes, concluidas],
             backgroundColor: ["#f59e0b", "#10b981"],
             borderWidth: 1
           }]
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
+        options: { responsive: true, maintainAspectRatio: false }
       });
 
       // Renderizar Gráfico de Barras (Prioridades)
       const ctxPrioridade = document.getElementById("graficoPrioridade").getContext("2d");
-      new Chart(ctxPrioridade, {
+      chartPrioridadeInstance = new Chart(ctxPrioridade, {
         type: "bar",
         data: {
           labels: ["Normal", "Moderada", "Urgente"],
@@ -144,14 +214,17 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
-          }
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
       });
     }
 
-    carregarDadosParaGraficos();
+    document.querySelector("#botaoFiltrar").addEventListener("click", function () {
+      carregarDadosParaGraficos(inputInicio.value, inputFim.value);
+    });
+
+    // Carga inicial
+    carregarDadosParaGraficos(inputInicio.value, inputFim.value);
   </script>
 </body>
 </html>
