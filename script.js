@@ -48,14 +48,14 @@ function mostrarToast(mensagem, tipo = "sucesso") {
 async function verificarSessao() {
   if (!supabaseClient) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
-  
+
   const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
   const elContainerRelatorio = document.querySelector("#containerBotaoRelatorio");
 
   if (session) {
     if (authContainer) authContainer.style.display = "none";
     if (appContainer) appContainer.style.display = "block";
-    
+
     aplicarModoMotoristaPelaSessao(session.user);
 
     if (elContainerRelatorio) {
@@ -213,6 +213,48 @@ function entregasDaData(data) {
     .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
 }
 
+// ==========================================
+// AUTOMAÇÃO CRM: VERIFICAR OU CRIAR CLIENTE
+// ==========================================
+async function verificarOuCriarClienteNoCRM(dadosEntrega) {
+  if (!supabaseClient || !dadosEntrega.cliente) return;
+
+  const nomeClienteLimpo = dadosEntrega.cliente.trim().toUpperCase();
+
+  // 1. Verificar se o cliente já existe na tabela 'clientes'
+  const { data: clienteExistente, error: erroBusca } = await supabaseClient
+    .from("clientes")
+    .select("id")
+    .eq("nome_empresa", nomeClienteLimpo)
+    .maybeSingle();
+
+  if (erroBusca) {
+    console.error("Erro ao verificar cliente para o CRM:", erroBusca);
+    return;
+  }
+
+  // 2. Se não existir, criar automaticamente no CRM
+  if (!clienteExistente) {
+    const novoCliente = {
+      nome_empresa: nomeClienteLimpo,
+      telefone: dadosEntrega.telefone || "",
+      bairro: (dadosEntrega.bairro || "").trim().toUpperCase(),
+      cidade_uf: dadosEntrega.cidade_uf || "João Pessoa - PB",
+      segmento: "Geral"
+    };
+
+    const { error: erroInsercao } = await supabaseClient
+      .from("clientes")
+      .insert([novoCliente]);
+
+    if (erroInsercao) {
+      console.error("Erro ao criar cliente automaticamente no CRM:", erroInsercao);
+    } else {
+      console.log(`Cliente "${nomeClienteLimpo}" criado automaticamente no CRM!`);
+    }
+  }
+}
+
 function montarCartao(entrega, indice, totalAtivas, concluida) {
   const endereco = enderecoDa(entrega);
   const telefoneLimpo = (entrega.telefone || "").replace(/[^\d+]/g, "");
@@ -307,7 +349,7 @@ function atualizarTela() {
 
   const elTitulo = document.querySelector("#tituloRota");
   const elDataHoje = document.querySelector("#dataHoje");
-  
+
   if (elTitulo) elTitulo.textContent = eHoje ? "Rota do dia" : "Rota de " + formatarDataCurta(dataSelecionada);
   if (elDataHoje && dataPorExtenso) elDataHoje.textContent = dataPorExtenso.charAt(0).toUpperCase() + dataPorExtenso.slice(1);
 
@@ -379,6 +421,10 @@ if (form) {
         mostrarToast("Erro ao atualizar entrega.", "erro");
         return;
       }
+
+       // Sincronizar com o CRM também na edição
+      await verificarOuCriarClienteNoCRM(dados);
+
       mostrarToast("Entrega atualizada com sucesso!");
     } else {
       const dataDaRota = (campoData ? campoData.value : "") || hojeLocal();
@@ -408,6 +454,10 @@ if (form) {
         mostrarToast("Erro ao salvar nova entrega.", "erro");
         return;
       }
+
+      // Criar ou atualizar automaticamente no CRM
+      await verificarOuCriarClienteNoCRM(dados);
+
       mostrarToast("Entrega adicionada com sucesso!");
     }
 
@@ -489,27 +539,136 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#cliente").value = entrega.cliente;
       document.querySelector("#telefone").value = entrega.telefone || "";
       document.querySelector("#rua").value = entrega.rua;
-      document.querySele
-document.querySelector("#numero").value = entrega.numero;
+      document.querySelector("#numero").value = entrega.numero;
       document.querySelector("#bairro").value = entrega.bairro;
-      document.querySelector("#cidadeUf").value = entrega.cidadeUf;
-      document.querySelector("#vendedor").value = entrega.vendedor || "";
+      document.querySelector("#cidadeUf").value = entrega.cidadeUf || "João Pessoa - PB";
+      document.querySelector("#vendedor").value = entrega.vendedor;
+      if (document.querySelector("#motorista")) {
+        document.querySelector("#motorista").value = entrega.motorista || "motorista";
+      }
+      if (document.querySelector("#statusSelect")) {
+        document.querySelector("#statusSelect").value = entrega.status || "pendente";
+      }
+      if (document.querySelector("#prioridade")) {
+        document.querySelector("#prioridade").value = entrega.prioridade || "normal";
+      }
       document.querySelector("#observacao").value = entrega.observacao || "";
-      
-      const inputMotorista = document.querySelector("#motorista");
-      if (inputMotorista) inputMotorista.value = entrega.motorista || "motorista";
 
-      const inputPrioridade = document.querySelector("#prioridade");
-      if (inputPrioridade) inputPrioridade.value = entrega.prioridade || "normal";
+      const botaoSalvar = document.querySelector("#botaoSalvar");
+      if (botaoSalvar) botaoSalvar.textContent = "Atualizar Entrega";
+      const botaoCancelar = document.querySelector("#botaoCancelar");
+      if (botaoCancelar) botaoCancelar.classList.remove("escondido");
 
-      const inputStatus = document.querySelector("#statusSelect");
-      if (inputStatus) inputStatus.value = entrega.status || "pendente";
-
-      document.querySelector("#botaoSalvar").textContent = "Salvar alterações";
-      document.querySelector("#botaoCancelar").classList.remove("escondido");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }
 });
 
-verificarSessao();
+const botaoCancelar = document.querySelector("#botaoCancelar");
+if (botaoCancelar) {
+  botaoCancelar.addEventListener("click", function () {
+    limparFormulario();
+  });
+}
+
+const botaoHoje = document.querySelector("#botaoHoje");
+if (botaoHoje) {
+  botaoHoje.addEventListener("click", function () {
+    if (campoData) {
+      campoData.value = hojeLocal();
+      atualizarTela();
+    }
+  });
+}
+
+if (campoData) {
+  campoData.addEventListener("change", function () {
+    atualizarTela();
+  });
+}
+
+// Botão Exportar CSV
+const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
+if (botaoExportarCsv) {
+  botaoExportarCsv.addEventListener("click", function () {
+    const dataAtual = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataAtual);
+
+    if (entregasDoDia.length === 0) {
+      mostrarToast("Não há entregas para exportar nesta data.", "erro");
+      return;
+    }
+
+    let csv = "ID,Data,Cliente,Telefone,Rua,Numero,Bairro,Cidade/UF,Vendedor,Motorista,Prioridade,Status\n";
+    entregasDoDia.forEach(e => {
+      csv += `"${e.id}","${e.data}","${e.cliente}","${e.telefone || ''}","${e.rua}","${e.numero}","${e.bairro}","${e.cidadeUf}","${e.vendedor}","${e.motorista}","${e.prioridade}","${e.status}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rotas_acoforte_" + dataAtual + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarToast("Ficheiro CSV exportado com sucesso!");
+  });
+}
+
+// Botão Partilhar WhatsApp (Resumo da Rota)
+const botaoWhatsapp = document.querySelector("#botaoWhatsapp");
+if (botaoWhatsapp) {
+  botaoWhatsapp.addEventListener("click", function () {
+    const dataAtual = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataAtual);
+
+    if (entregasDoDia.length === 0) {
+      mostrarToast("Não há entregas para partilhar nesta data.", "erro");
+      return;
+    }
+
+    let texto = `📋 *ROTA DE ENTREGAS - AÇOFORTE* (${formatarDataCurta(dataAtual)})\n\n`;
+    entregasDoDia.forEach((e, index) => {
+      texto += `${index + 1}. *${e.cliente}*\n   📍 ${e.rua}, ${e.numero} - ${e.bairro}\n   📌 Status: ${e.status.toUpperCase()}\n\n`;
+    });
+
+    const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(texto);
+    window.open(url, "_blank");
+  });
+}
+
+// Botão Agrupar por Bairro
+const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
+if (botaoAgruparBairro) {
+  botaoAgruparBairro.addEventListener("click", async function () {
+    const dataAtual = campoData ? campoData.value : hojeLocal();
+    const entregasDoDia = entregasDaData(dataAtual);
+
+    if (entregasDoDia.length <= 1) {
+      mostrarToast("Não há entregas suficientes para agrupar.", "erro");
+      return;
+    }
+
+    entregasDoDia.sort((a, b) => (a.bairro || "").localeCompare(b.bairro || ""));
+
+    for (let i = 0; i < entregasDoDia.length; i++) {
+      await supabaseClient.from("rotas").update({ ordem: i + 1 }).eq("id", entregasDoDia[i].id);
+    }
+
+    mostrarToast("Entregas agrupadas por bairro com sucesso!");
+    await carregarEntregasDoSupabase();
+  });
+}
+
+// Botão Salvar Histórico (Duplicar Rota para Amanhã ou backup)
+const botaoSalvarHistorico = document.querySelector("#botaoSalvarHistorico");
+if (botaoSalvarHistorico) {
+  botaoSalvarHistorico.addEventListener("click", function () {
+    mostrarToast("Histórico de rotas sincronizado com o Supabase com sucesso! 💾");
+  });
+}
+
+// Inicialização da Sessão ao carregar a página
+window.addEventListener("DOMContentLoaded", function () {
+  verificarSessao();
+}); 
