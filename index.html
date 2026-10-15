@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
 
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- Configurações do PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
@@ -47,13 +47,13 @@
         <div>
           <!-- Logótipo da AçoForte no Cabeçalho -->
           <img src="icon-192.png" alt="AçoForte Logo" class="logo-cabecalho">
-          
+
           <h1 id="tituloRota">Rota do dia</h1>
           <p id="dataHoje" class="data-hoje">-</p>
         </div>
         <button type="button" id="botaoSair" class="botao-pequeno">Sair</button>
       </div>
-      
+
       <!-- Estatísticas / Indicadores -->
       <div class="estatisticas-painel">
         <div class="card-estatistica">
@@ -77,7 +77,7 @@
         <h2>Nova / Editar Entrega</h2>
         <form id="formEntrega">
           <input type="hidden" id="entregaId">
-          
+
           <div class="grid-formulario">
             <div class="grupo-formulario">
               <label for="cliente">Cliente / Empresa *</label>
@@ -171,8 +171,9 @@
 
         <!-- Barra de Ações Avançadas -->
         <div class="acoes-extras">
-          <!-- Botão de acesso ao Power BI / Relatórios (Visível apenas para o Gestor) -->
+          <!-- Botão de acesso ao Power BI / Relatórios e CRM (Visível apenas para o Gestor) -->
           <div id="containerBotaoRelatorio" class="escondido" style="display: inline-block;">
+            <a href="clientes.html" class="botao-pequeno" style="background-color: #2563eb; color: #fff; text-decoration: none; border-color: #2563eb; margin-right: 6px;">📇 CRM de Clientes</a>
             <a href="relatorio.html" class="botao-pequeno" style="background-color: #0f172a; color: #fff; text-decoration: none; border-color: #0f172a;">📊 Relatórios BI</a>
           </div>
 
