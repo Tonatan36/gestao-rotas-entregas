@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AçoForte - CRM de Clientes</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase Client UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px;">
+
+  <div class="app-container" style="max-width: 1200px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+    
+    <!-- Cabeçalho -->
+    <header class="cabecalho-app" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px;">
+      <div>
+        <h1 style="margin: 0; color: #0f172a; font-size: 24px;">📇 AçoForte - CRM & Histórico Comercial</h1>
+        <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Gestão centralizada de contactos e rastreabilidade de entregas por cliente.</p>
+      </div>
+      <div>
+        <a href="index.html" class="botao-pequeno" style="text-decoration: none; padding: 10px 18px; background-color: #334155; color: #fff; border-radius: 6px; font-weight: 600; margin-right: 8px;">Voltar às Rotas</a>
+        <a href="relatorio.html" class="botao-pequeno" style="text-decoration: none; padding: 10px 18px; background-color: #0f172a; color: #fff; border-radius: 6px; font-weight: 600;">Relatórios BI</a>
+      </div>
+    </header>
+
+    <main class="conteudo-principal">
+      
+      <!-- Formulário de Cadastro de Novo Cliente -->
+      <section class="secao-formulario" style="margin-bottom: 30px;">
+        <h2>Registar Novo Cliente</h2>
+        <form id="formCliente">
+          <div class="grid-formulario">
+            <div class="grupo-formulario">
+              <label for="nomeEmpresa">Nome / Empresa *</label>
+              <input type="text" id="nomeEmpresa" required placeholder="Ex: Construtora Paraíba">
+            </div>
+            <div class="grupo-formulario">
+              <label for="cnpjCpf">CNPJ / CPF</label>
+              <input type="text" id="cnpjCpf" placeholder="00.000.000/0001-00">
+            </div>
+            <div class="grupo-formulario">
+              <label for="telefoneCliente">Telefone / WhatsApp</label>
+              <input type="text" id="telefoneCliente" placeholder="(83) 90000-0000">
+            </div>
+            <div class="grupo-formulario">
+              <label for="emailCliente">E-mail</label>
+              <input type="email" id="emailCliente" placeholder="cliente@email.com">
+            </div>
+            <div class="grupo-formulario">
+              <label for="bairroCliente">Bairro *</label>
+              <input type="text" id="bairroCliente" required placeholder="Ex: Bancários">
+            </div>
+            <div class="grupo-formulario">
+              <label for="segmentoCliente">Segmento</label>
+              <select id="segmentoCliente">
+                <option value="Construção / Obra">Construção / Obra</option>
+                <option value="Serralheria">Serralheria</option>
+                <option value="Varejo / Comércio">Varejo / Comércio</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+          </div>
+          <div class="botoes-form" style="margin-top: 15px;">
+            <button type="submit" class="botao-principal">Guardar Cliente</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Lista de Clientes Registados com Histórico -->
+      <section class="secao-lista">
+        <h2>Base de Clientes & Histórico de Pedidos (<span id="contadorClientes">0</span>)</h2>
+        <div id="listaClientes" class="lista-cards" style="display: flex; flex-direction: column; gap: 16px; margin-top: 15px;">
+          <!-- Os cartões de clientes com acordeão de histórico entram aqui -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+    if (usuarioLogado === "motorista" || usuarioLogado === "motorista2") {
+      alert("Acesso restrito apenas ao gestor.");
+      window.location.href = "index.html";
+    }
+
+    const SUPABASE_URL = "https://hzgrulwdktmkgnxggsum.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_zPhD9y1Kvhf06Ju95ExLZA_vk2rpZbp";
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+    function mostrarToast(mensagem, tipo = "sucesso") {
+      const container = document.querySelector("#toastContainer");
+      if (!container) return;
+      const toast = document.createElement("div");
+      toast.className = "toast " + tipo;
+      toast.textContent = mensagem;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 3000);
+    }
+
+    async function carregarClientesComHistorico() {
+      if (!supabaseClient) return;
+
+      // Buscar clientes e rotas em paralelo
+      const [resClientes, resRotas] = await Promise.all([
+        supabaseClient.from("clientes").select("*").order("nome_empresa", { ascending: true }),
+        supabaseClient.from("rotas").select("*")
+      ]);
+
+      const listaEl = document.querySelector("#listaClientes");
+      const contadorEl = document.querySelector("#contadorClientes");
+
+      if (resClientes.error) {
+        console.error("Erro ao carregar clientes:", resClientes.error);
+        listaEl.innerHTML = '<div class="vazio">Erro ao carregar dados.</div>';
+        return;
+      }
+
+      const clientes = resClientes.data || [];
+      const rotas = resRotas.data || [];
+
+      contadorEl.textContent = clientes.length;
+
+      if (clientes.length === 0) {
+        listaEl.innerHTML = '<div class="vazio">Nenhum cliente cadastrado ainda.</div>';
+        return;
+      }
+
+      listaEl.innerHTML = clientes.map(c => {
+        // Filtrar entregas deste cliente específico (comparando nome maiúsculo)
+        const entregasCliente = rotas.filter(r => (r.cliente || "").trim().toUpperCase() === (c.nome_empresa || "").trim().toUpperCase());
+
+        let historicoHTML = "";
+        if (entregasCliente.length === 0) {
+          historicoHTML = '<p style="font-size: 12px; color: #64748b; font-style: italic; margin: 4px 0;">Nenhuma entrega registada para este cliente.</p>';
+        } else {
+          historicoHTML = entregasCliente.map(e => `
+            <div style="font-size: 12px; background: #fff; padding: 6px 10px; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+              <span>📅 <strong>${e.data_rota}</strong> — ${e.rua}, ${e.numero} (${e.bairro})</span>
+              <span style="font-weight: 600; color: ${e.status === 'concluida' ? '#10b981' : '#f59e0b'};">${e.status.toUpperCase()}</span>
+            </div>
+          `).join("");
+        }
+
+        return `
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 16px;">${c.nome_empresa}</h3>
+                <p style="margin: 2px 0; color: #475569; font-size: 13px;"><strong>Bairro:</strong> ${c.bairro} | <strong>Segmento:</strong> ${c.segmento || 'Geral'}</p>
+                <p style="margin: 2px 0; color: #475569; font-size: 13px;"><strong>Telefone:</strong> ${c.telefone || 'Não informado'} | <strong>E-mail:</strong> ${c.email || 'Não informado'}</p>
+              </div>
+              <div style="background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #334155;">
+                Total Pedidos: ${entregasCliente.length}
+              </div>
+            </div>
+
+            <div style="margin-top: 12px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+              <p style="font-size: 12px; font-weight: 600; color: #334155; margin: 0 0 6px 0;">Histórico de Entregas:</p>
+              <div style="max-height: 120px; overflow-y: auto;">
+                ${historicoHTML}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    const formCliente = document.querySelector("#formCliente");
+    if (formCliente) {
+      formCliente.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const novoCliente = {
+          nome_empresa: document.querySelector("#nomeEmpresa").value.trim().toUpperCase(),
+          cnpj_cpf: document.querySelector("#cnpjCpf").value.trim(),
+          telefone: document.querySelector("#telefoneCliente").value.trim(),
+          email: document.querySelector("#emailCliente").value.trim(),
+          bairro: document.querySelector("#bairroCliente").value.trim().toUpperCase(),
+          segmento: document.querySelector("#segmentoCliente").value
+        };
+
+        const { error } = await supabaseClient.from("clientes").insert([novoCliente]);
+        if (error) {
+          mostrarToast("Erro ao guardar cliente.", "erro");
+          return;
+        }
+
+        mostrarToast("Cliente guardado com sucesso!");
+        formCliente.reset();
+        carregarClientesComHistorico();
+      });
+    }
+
+    carregarClientesComHistorico();
+  </script>
+</body>
+</html>
