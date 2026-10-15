@@ -196,23 +196,6 @@ function formatarData(dataISO) {
   });
 }
 
-function formatarDataCurta(dataISO) {
-  if (!dataISO) return "";
-  const partes = dataISO.split("-");
-  return partes[2] + "/" + partes[1] + "/" + partes[0];
-}
-
-function enderecoDa(entrega) {
-  return [entrega.rua, entrega.numero, entrega.bairro, entrega.cidadeUf, "Brasil"].filter(Boolean).join(", ");
-}
-
-function entregasDaData(data) {
-  const dataUsada = data || (campoData ? campoData.value : "") || hojeLocal();
-  return entregas
-    .filter(function (entrega) { return entrega.data === dataUsada; })
-    .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
-}
-
 // ==========================================
 // AUTOMAÇÃO CRM: VERIFICAR OU CRIAR CLIENTE
 // ==========================================
@@ -221,7 +204,6 @@ async function verificarOuCriarClienteNoCRM(dadosEntrega) {
 
   const nomeClienteLimpo = dadosEntrega.cliente.trim().toUpperCase();
 
-  // 1. Verificar se o cliente já existe na tabela 'clientes'
   const { data: clienteExistente, error: erroBusca } = await supabaseClient
     .from("clientes")
     .select("id")
@@ -233,7 +215,6 @@ async function verificarOuCriarClienteNoCRM(dadosEntrega) {
     return;
   }
 
-  // 2. Se não existir, criar automaticamente no CRM
   if (!clienteExistente) {
     const novoCliente = {
       nome_empresa: nomeClienteLimpo,
@@ -249,8 +230,6 @@ async function verificarOuCriarClienteNoCRM(dadosEntrega) {
 
     if (erroInsercao) {
       console.error("Erro ao criar cliente automaticamente no CRM:", erroInsercao);
-    } else {
-      console.log(`Cliente "${nomeClienteLimpo}" criado automaticamente no CRM!`);
     }
   }
 }
@@ -422,9 +401,7 @@ if (form) {
         return;
       }
 
-       // Sincronizar com o CRM também na edição
       await verificarOuCriarClienteNoCRM(dados);
-
       mostrarToast("Entrega atualizada com sucesso!");
     } else {
       const dataDaRota = (campoData ? campoData.value : "") || hojeLocal();
@@ -455,9 +432,7 @@ if (form) {
         return;
       }
 
-      // Criar ou atualizar automaticamente no CRM
       await verificarOuCriarClienteNoCRM(dados);
-
       mostrarToast("Entrega adicionada com sucesso!");
     }
 
@@ -466,7 +441,6 @@ if (form) {
   });
 }
 
-// Botão de Otimização de Rota (Agrupamento por Bairro e Prioridade)
 const botaoOtimizar = document.querySelector("#botaoOtimizar");
 if (botaoOtimizar) {
   botaoOtimizar.addEventListener("click", async function () {
@@ -543,6 +517,7 @@ document.addEventListener("click", async function (evento) {
       document.querySelector("#bairro").value = entrega.bairro;
       document.querySelector("#cidadeUf").value = entrega.cidadeUf || "João Pessoa - PB";
       document.querySelector("#vendedor").value = entrega.vendedor;
+      
       if (document.querySelector("#motorista")) {
         document.querySelector("#motorista").value = entrega.motorista || "motorista";
       }
@@ -587,7 +562,6 @@ if (campoData) {
   });
 }
 
-// Botão Exportar CSV
 const botaoExportarCsv = document.querySelector("#botaoExportarCsv");
 if (botaoExportarCsv) {
   botaoExportarCsv.addEventListener("click", function () {
@@ -615,7 +589,6 @@ if (botaoExportarCsv) {
   });
 }
 
-// Botão Partilhar WhatsApp (Resumo da Rota)
 const botaoWhatsapp = document.querySelector("#botaoWhatsapp");
 if (botaoWhatsapp) {
   botaoWhatsapp.addEventListener("click", function () {
@@ -637,7 +610,6 @@ if (botaoWhatsapp) {
   });
 }
 
-// Botão Agrupar por Bairro
 const botaoAgruparBairro = document.querySelector("#botaoAgruparBairro");
 if (botaoAgruparBairro) {
   botaoAgruparBairro.addEventListener("click", async function () {
@@ -660,7 +632,6 @@ if (botaoAgruparBairro) {
   });
 }
 
-// Botão Salvar Histórico (Duplicar Rota para Amanhã ou backup)
 const botaoSalvarHistorico = document.querySelector("#botaoSalvarHistorico");
 if (botaoSalvarHistorico) {
   botaoSalvarHistorico.addEventListener("click", function () {
@@ -668,7 +639,23 @@ if (botaoSalvarHistorico) {
   });
 }
 
-// Inicialização da Sessão ao carregar a página
 window.addEventListener("DOMContentLoaded", function () {
   verificarSessao();
-}); 
+});
+
+function formatarDataCurta(dataISO) {
+  if (!dataISO) return "";
+  const partes = dataISO.split("-");
+  return partes[2] + "/" + partes[1] + "/" + partes[0];
+}
+
+function enderecoDa(entrega) {
+  return [entrega.rua, entrega.numero, entrega.bairro, entrega.cidadeUf, "Brasil"].filter(Boolean).join(", ");
+}
+
+function entregasDaData(data) {
+  const dataUsada = data || (campoData ? campoData.value : "") || hojeLocal();
+  return entregas
+    .filter(function (entrega) { return entrega.data === dataUsada; })
+    .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
+}
