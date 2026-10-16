@@ -598,3 +598,48 @@ body {
   }
 }
 
+/* ==========================================
+   CORREÇÃO DE ESPAÇAMENTO E GRELHA DO FORMULÁRIO
+   ========================================== */
+.grid-formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px; /* Garante espaço seguro entre as colunas e linhas */
+  margin-bottom: 15px;
+}
+
+.grupo-formulario {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px; /* Garante respiro vertical entre os campos */
+}
+
+.grupo-formulario label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.grupo-formulario input,
+.grupo-formulario select,
+.grupo-formulario textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #ffffff;
+  color: #0f172a;
+  box-sizing: border-box; /* Impede que o padding estoure o tamanho do campo */
+}
+
+.grupo-formulario input:focus,
+.grupo-formulario select:focus,
+.grupo-formulario textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+
