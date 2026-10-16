@@ -1,4 +1,4 @@
-/* ==========================================
+u/* ==========================================
    ESTILOS GERAIS E DO APLICATIVO
    ========================================== */
 
@@ -551,5 +551,50 @@ body {
   flex-direction: column;
   overflow-y: auto;
   background-color: #f8fafc;
+}
+
+/* ==========================================
+   CORREÇÃO RESPONSIVA PARA A SIDEBAR
+   ========================================== */
+@media (max-width: 768px) {
+  .layout-app {
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: auto !important;
+  }
+  
+  .sidebar-lateral {
+    width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px !important;
+  }
+
+  .sidebar-menu p {
+    display: none; /* Oculta o título "Navegação" no mobile para poupar espaço */
+  }
+
+  .sidebar-link {
+    margin-bottom: 0 !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    background: #f1f5f9;
+  }
+
+  .sidebar-rodape {
+    display: none; /* Oculta o rodapé no telemóvel */
+  }
+
+  .conteudo-principal-wrapper {
+    height: auto !important;
+    overflow-y: visible !important;
+  }
 }
 
