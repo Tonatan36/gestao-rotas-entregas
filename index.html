@@ -18,7 +18,7 @@
   <!-- Supabase Client UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body style="background-color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0;">
 
   <!-- ================= TELA DE LOGIN ================= -->
   <div id="authContainer" class="auth-container">
@@ -40,192 +40,179 @@
     </div>
   </div>
 
-  <!-- ================= APLICAÇÃO PRINCIPAL COM SIDEBAR ================= -->
-  <div id="appContainer" class="layout-app" style="display: none; height: 100vh; overflow: hidden;">
-
-    <!-- 1. BARRA LATERAL FIXA (SIDEBAR) -->
-    <aside class="sidebar-lateral">
-      <div>
-        <div class="sidebar-topo-logo">
-          <span style="background: #2563eb; color: #fff; padding: 4px 8px; border-radius: 4px;">AF</span> AçoForte
-        </div>
-
-        <div class="sidebar-menu">
-          <p>Navegação</p>
-          <a href="index.html" class="sidebar-link ativo">
-            🚛 Gestão de Rotas
-          </a>
-          <a href="clientes.html" class="sidebar-link">
-            📇 CRM de Clientes
-          </a>
-          <!-- Visível apenas para gestores -->
-          <div id="containerBotaoRelatorio" class="escondido" style="margin-top: 4px;">
-            <a href="relatorio.html" class="sidebar-link">
-              📊 Relatórios BI
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar-rodape">
-        <p style="margin: 0; font-weight: 600; color: #0f172a;">LogiSync Pro</p>
-        <p style="margin: 2px 0 0 0;">Zero-Cost Infrastructure</p>
-      </div>
-    </aside>
-
-    <!-- 2. CONTEÚDO PRINCIPAL À DIREITA -->
-    <main class="conteudo-principal-wrapper">
+  <!-- ================= APLICAÇÃO PRINCIPAL ================= -->
+  <div id="appContainer" class="app-container" style="display: none; max-width: 1200px; margin: 0 auto; padding: 20px;">
+    
+    <!-- CABEÇALHO COM MENU DE NAVEGAÇÃO SUPERIOR -->
+    <header style="background: #ffffff; padding: 16px 24px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 12px;">
       
-      <!-- Cabeçalho Superior -->
-      <header class="cabecalho-app" style="background: #ffffff; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; box-shadow: none;">
-        <div class="topo-acoes" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-          <div>
-            <h1 id="tituloRota" style="font-size: 18px; margin: 0; color: #0f172a;">Rota do dia</h1>
-            <p id="dataHoje" class="data-hoje" style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">-</p>
-          </div>
-          <button type="button" id="botaoSair" class="botao-pequeno" style="background-color: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;">Sair</button>
+      <!-- Logótipo e Título -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="icon-192.png" alt="AçoForte Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+        <div>
+          <h1 id="tituloRota" style="font-size: 18px; margin: 0; color: #0f172a;">Rota do dia</h1>
+          <p id="dataHoje" class="data-hoje" style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">-</p>
         </div>
-      </header>
-
-      <!-- Área de Trabalho com Scroll -->
-      <div style="padding: 24px; flex: 1; overflow-y: auto;">
-
-        <!-- Estatísticas / Indicadores -->
-        <div class="estatisticas-painel" style="margin-bottom: 20px;">
-          <div class="card-estatistica">
-            <span id="totalEntregas" class="numero-estatistica">0</span>
-            <span class="rotulo-estatistica">Total</span>
-          </div>
-          <div class="card-estatistica">
-            <span id="totalPendentes" class="numero-estatistica">0</span>
-            <span class="rotulo-estatistica">Pendentes</span>
-          </div>
-          <div class="card-estatistica">
-            <span id="totalConcluidas" class="numero-estatistica">0</span>
-            <span class="rotulo-estatistica">Concluídas</span>
-          </div>
-        </div>
-
-        <!-- Seção de Cadastro / Edição -->
-        <section class="secao-formulario" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-          <h2 style="font-size: 16px; margin-top: 0; color: #0f172a;">Nova / Editar Entrega</h2>
-          <form id="formEntrega">
-            <input type="hidden" id="entregaId">
-
-            <div class="grid-formulario">
-              <div class="grupo-formulario">
-                <label for="cliente">Cliente / Empresa *</label>
-                <input type="text" id="cliente" required placeholder="Nome do cliente">
-              </div>
-              <div class="grupo-formulario">
-                <label for="telefone">Telefone / WhatsApp</label>
-                <input type="text" id="telefone" placeholder="(83) 90000-0000">
-              </div>
-              <div class="grupo-formulario">
-                <label for="rua">Rua / Logradouro *</label>
-                <input type="text" id="rua" required placeholder="Ex: Av. Epitácio Pessoa">
-              </div>
-              <div class="grupo-formulario">
-                <label for="numero">Número *</label>
-                <input type="text" id="numero" required placeholder="Ex: 1000 ou S/N">
-              </div>
-              <div class="grupo-formulario">
-                <label for="bairro">Bairro *</label>
-                <input type="text" id="bairro" required placeholder="Ex: Bancários">
-              </div>
-              <div class="grupo-formulario">
-                <label for="cidadeUf">Cidade / UF *</label>
-                <input type="text" id="cidadeUf" value="João Pessoa - PB" required>
-              </div>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 10px;">
-              <label for="vendedor">Vendedor *</label>
-              <select id="vendedor" required>
-                <option value="">Selecione o vendedor...</option>
-                <option value="Paulo">Paulo</option>
-                <option value="Alexandre">Alexandre</option>
-                <option value="Yan">Yan</option>
-                <option value="Ewerton">Ewerton</option>
-              </select>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 10px;">
-              <label for="motorista">Motorista Responsável *</label>
-              <select id="motorista" required>
-                <option value="">Selecione o motorista...</option>
-                <option value="motorista">Motorista 1</option>
-                <option value="motorista2">Motorista 2</option>
-              </select>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 10px;">
-              <label for="statusSelect">Status Operacional *</label>
-              <select id="statusSelect">
-                <option value="pendente">Pendente (Aguardando)</option>
-                <option value="separacao">Em Separação (Armazém)</option>
-                <option value="rota">Em Rota (Com o Motorista)</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 10px;">
-              <label for="prioridade">Nível de Prioridade / Urgência</label>
-              <select id="prioridade">
-                <option value="normal">Normal (Verde)</option>
-                <option value="moderada">Moderada (Amarelo)</option>
-                <option value="urgente">Urgente (Vermelho)</option>
-              </select>
-            </div>
-
-            <div class="grupo-formulario" style="margin-top: 10px;">
-              <label for="observacao">Observações (Ponto de referência, portão, etc.)</label>
-              <textarea id="observacao" rows="2" placeholder="Ex: Deixar na portaria"></textarea>
-            </div>
-
-            <div class="botoes-form" style="margin-top: 15px;">
-              <button type="submit" id="botaoSalvar" class="botao-principal">Adicionar à rota</button>
-              <button type="button" id="botaoCancelar" class="botao-secundario escondido">Cancelar</button>
-            </div>
-          </form>
-        </section>
-
-        <!-- Ferramentas e Seletor de Data -->
-        <section class="secao-ferramentas" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-          <div class="grupo-formulario data-seletor">
-            <label for="dataSelecionada">Data da Rota:</label>
-            <input type="date" id="dataSelecionada">
-            <button type="button" id="botaoHoje" class="botao-pequeno">Hoje</button>
-          </div>
-          <p id="avisoDataCadastro" class="aviso-data">Novas entregas serão registradas na data selecionada.</p>
-
-          <div class="acoes-extras" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
-            <input type="file" id="inputCsv" accept=".csv" style="display: none;">
-
-            <button type="button" id="botaoExportarCsv" class="botao-pequeno" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;">📥 Exportar CSV</button>
-            <button type="button" id="botaoOtimizar" class="botao-pequeno">📍 Otimizar GPS</button>
-            <button type="button" id="botaoWhatsapp" class="botao-pequeno">💬 Partilhar WhatsApp</button>
-            <button type="button" id="botaoAgruparBairro" class="botao-pequeno">📦 Agrupar por Bairro</button>
-            <button type="button" id="botaoSalvarHistorico" class="botao-pequeno">💾 Salvar Histórico</button>
-          </div>
-        </section>
-
-        <!-- Lista de Entregas Pendentes / Em Andamento -->
-        <section class="secao-lista" style="margin-bottom: 20px;">
-          <h2>Entregas em Andamento</h2>
-          <div id="listaPendentes" class="lista-cards"></div>
-        </section>
-
-        <!-- Lista de Entregas Concluídas / Canceladas -->
-        <section class="secao-lista">
-          <h2>Concluídas & Canceladas (<span id="contadorConcluidas">0</span>)</h2>
-          <div id="listaConcluidas" class="lista-cards concluidas"></div>
-        </section>
-
       </div>
-    </main>
 
+      <!-- Menu de Abas / Navegação -->
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <a href="index.html" class="botao-pequeno" style="background-color: #2563eb; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 600;">🚛 Gestão de Rotas</a>
+        <a href="clientes.html" class="botao-pequeno" style="background-color: #f1f5f9; color: #334155; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 600; border: 1px solid #cbd5e1;">📇 CRM de Clientes</a>
+        
+        <!-- Botão BI (Visível apenas para gestores) -->
+        <div id="containerBotaoRelatorio" class="escondido" style="display: inline-block;">
+          <a href="relatorio.html" class="botao-pequeno" style="background-color: #0f172a; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-weight: 600;">📊 Relatórios BI</a>
+        </div>
+
+        <button type="button" id="botaoSair" class="botao-pequeno" style="background-color: #ef4444; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">Sair</button>
+      </div>
+    </header>
+
+    <main class="conteudo-principal">
+      
+      <!-- Estatísticas / Indicadores -->
+      <div class="estatisticas-painel" style="margin-bottom: 20px;">
+        <div class="card-estatistica">
+          <span id="totalEntregas" class="numero-estatistica">0</span>
+          <span class="rotulo-estatistica">Total</span>
+        </div>
+        <div class="card-estatistica">
+          <span id="totalPendentes" class="numero-estatistica">0</span>
+          <span class="rotulo-estatistica">Pendentes</span>
+        </div>
+        <div class="card-estatistica">
+          <span id="totalConcluidas" class="numero-estatistica">0</span>
+          <span class="rotulo-estatistica">Concluídas</span>
+        </div>
+      </div>
+
+      <!-- Seção de Cadastro / Edição -->
+      <section class="secao-formulario" style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+        <h2 style="font-size: 16px; margin-top: 0; color: #0f172a;">Nova / Editar Entrega</h2>
+        <form id="formEntrega">
+          <input type="hidden" id="entregaId">
+
+          <div class="grid-formulario">
+            <div class="grupo-formulario">
+              <label for="cliente">Cliente / Empresa *</label>
+              <input type="text" id="cliente" required placeholder="Nome do cliente">
+            </div>
+            <div class="grupo-formulario">
+              <label for="telefone">Telefone / WhatsApp</label>
+              <input type="text" id="telefone" placeholder="(83) 90000-0000">
+            </div>
+            <div class="grupo-formulario">
+              <label for="rua">Rua / Logradouro *</label>
+              <input type="text" id="rua" required placeholder="Ex: Av. Epitácio Pessoa">
+            </div>
+            <div class="grupo-formulario">
+              <label for="numero">Número *</label>
+              <input type="text" id="numero" required placeholder="Ex: 1000 ou S/N">
+            </div>
+            <div class="grupo-formulario">
+              <label for="bairro">Bairro *</label>
+              <input type="text" id="bairro" required placeholder="Ex: Bancários">
+            </div>
+            <div class="grupo-formulario">
+              <label for="cidadeUf">Cidade / UF *</label>
+              <input type="text" id="cidadeUf" value="João Pessoa - PB" required>
+            </div>
+          </div>
+
+          <!-- Campo do Vendedor -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="vendedor">Vendedor *</label>
+            <select id="vendedor" required>
+              <option value="">Selecione o vendedor...</option>
+              <option value="Paulo">Paulo</option>
+              <option value="Alexandre">Alexandre</option>
+              <option value="Yan">Yan</option>
+              <option value="Ewerton">Ewerton</option>
+            </select>
+          </div>
+
+          <!-- Campo do Motorista Responsável -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="motorista">Motorista Responsável *</label>
+            <select id="motorista" required>
+              <option value="">Selecione o motorista...</option>
+              <option value="motorista">Motorista 1</option>
+              <option value="motorista2">Motorista 2</option>
+            </select>
+          </div>
+
+          <!-- Campo de Status Operacional -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="statusSelect">Status Operacional *</label>
+            <select id="statusSelect">
+              <option value="pendente">Pendente (Aguardando)</option>
+              <option value="separacao">Em Separação (Armazém)</option>
+              <option value="rota">Em Rota (Com o Motorista)</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+
+          <!-- Campo de Prioridade / Alerta Inteligente -->
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="prioridade">Nível de Prioridade / Urgência</label>
+            <select id="prioridade">
+              <option value="normal">Normal (Verde)</option>
+              <option value="moderada">Moderada (Amarelo)</option>
+              <option value="urgente">Urgente (Vermelho)</option>
+            </select>
+          </div>
+
+          <div class="grupo-formulario" style="margin-top: 10px;">
+            <label for="observacao">Observações (Ponto de referência, portão, etc.)</label>
+            <textarea id="observacao" rows="2" placeholder="Ex: Deixar na portaria"></textarea>
+          </div>
+
+          <div class="botoes-form" style="margin-top: 15px;">
+            <button type="submit" id="botaoSalvar" class="botao-principal">Adicionar à rota</button>
+            <button type="button" id="botaoCancelar" class="botao-secundario escondido">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Ferramentas e Seletor de Data -->
+      <section class="secao-ferramentas" style="background: #fff; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+        <div class="grupo-formulario data-seletor">
+          <label for="dataSelecionada">Data da Rota:</label>
+          <input type="date" id="dataSelecionada">
+          <button type="button" id="botaoHoje" class="botao-pequeno">Hoje</button>
+        </div>
+        <p id="avisoDataCadastro" class="aviso-data">Novas entregas serão registradas na data selecionada.</p>
+
+        <!-- Barra de Ações Avançadas -->
+        <div class="acoes-extras" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <label for="inputCsv" class="botao-pequeno botao-arquivo">📂 Importar CSV</label>
+          <input type="file" id="inputCsv" accept=".csv" style="display: none;">
+
+          <button type="button" id="botaoExportarCsv" class="botao-pequeno" style="background-color: #dcfce7; color: #166534; border-color: #bbf7d0;">📥 Exportar CSV</button>
+          <button type="button" id="botaoOtimizar" class="botao-pequeno">📍 Otimizar GPS</button>
+          <button type="button" id="botaoWhatsapp" class="botao-pequeno">💬 Partilhar WhatsApp</button>
+          <button type="button" id="botaoAgruparBairro" class="botao-pequeno">📦 Agrupar por Bairro</button>
+          <button type="button" id="botaoSalvarHistorico" class="botao-pequeno">💾 Salvar Histórico</button>
+        </div>
+      </section>
+
+      <!-- Lista de Entregas Pendentes / Em Andamento -->
+      <section class="secao-lista" style="margin-bottom: 20px;">
+        <h2>Entregas em Andamento</h2>
+        <div id="listaPendentes" class="lista-cards">
+          <!-- Cards entram aqui -->
+        </div>
+      </section>
+
+      <!-- Lista de Entregas Concluídas / Canceladas -->
+      <section class="secao-lista" style="margin-bottom: 40px;">
+        <h2>Concluídas & Canceladas (<span id="contadorConcluidas">0</span>)</h2>
+        <div id="listaConcluidas" class="lista-cards concluidas">
+          <!-- Cards concluídos entram aqui -->
+        </div>
+      </section>
+    </main>
   </div>
 
   <div id="toastContainer" class="toast-container"></div>
