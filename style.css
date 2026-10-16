@@ -461,3 +461,95 @@ body.modo-motorista .secao-ferramentas {
   display: block !important;
   width: 100% !important;
 }
+
+/* ==========================================
+   LAYOUT DE BARRA LATERAL (SIDEBAR SaaS)
+   ========================================== */
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.layout-app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Barra Lateral Esquerda */
+.sidebar-lateral {
+  width: 240px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar-topo-logo {
+  padding: 20px;
+  font-weight: bold;
+  font-size: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+}
+
+.sidebar-menu {
+  padding: 12px;
+}
+
+.sidebar-menu p {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #334155;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  transition: background 0.2s;
+}
+
+.sidebar-link:hover {
+  background-color: #f1f5f9;
+}
+
+.sidebar-link.ativo {
+  color: #2563eb;
+  background-color: #eff6ff;
+  font-weight: 600;
+}
+
+.sidebar-rodape {
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Área de Conteúdo Principal à Direita */
+.conteudo-principal-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
