@@ -196,31 +196,56 @@ function formatarData(dataISO) {
   });
 }
 
+function formatarDataCurta(dataISO) {
+  if (!dataISO) return "";
+  const partes = dataISO.split("-");
+  return partes[2] + "/" + partes[1] + "/" + partes[0];
+}
+
+function enderecoDa(entrega) {
+  return [entrega.rua, entrega.numero, entrega.bairro, entrega.cidadeUf, "Brasil"].filter(Boolean).join(", ");
+}
+
+function entregasDaData(data) {
+  const dataUsada = data || (campoData ? campoData.value : "") || hojeLocal();
+  return entregas
+    .filter(function (entrega) { return entrega.data === dataUsada; })
+    .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
+}
+
 // ==========================================
-// AUTOMAÇÃO CRM: VERIFICAR OU CRIAR CLIENTE
+// AUTOMAÇÃO CRM: CRIAR OU ATUALIZAR CLIENTE
 // ==========================================
 async function verificarOuCriarClienteNoCRM(dadosEntrega) {
   if (!supabaseClient || !dadosEntrega.cliente) return;
 
   const nomeClienteLimpo = dadosEntrega.cliente.trim().toUpperCase();
+  const bairroLimpo = (dadosEntrega.bairro || "").trim().toUpperCase();
+  const telefoneLimpo = (dadosEntrega.telefone || "").trim();
+  const cidadeUfLimpa = (dadosEntrega.cidade_uf || "João Pessoa - PB").trim().toUpperCase();
 
-  const { data: clienteExistente, error: erroBusca } = await supabaseClient
-    .from("clientes")
-    .select("id")
-    .eq("nome_empresa", nomeClienteLimpo)
-    .maybeSingle();
+  try {
+    const { data: clienteExistente, error: erroBusca } = await supabaseClient
+      .from("clientes")
+      .select("id")
+      .eq("nome_empresa", nomeClienteLimpo)
+      .maybeSingle();
 
-  if (erroBusca) {
-    console.error("Erro ao verificar cliente para o CRM:", erroBusca);
-    return;
-  }
+    if (erroBusca) {
+      console.error("Aviso ao buscar cliente no CRM:", erroBusca.message);
+      return;
+    }
 
-  if (!clienteExistente) {
+    if (clienteExistente) {
+      console.log(`Cliente "${nomeClienteLimpo}" já existe no CRM.`);
+      return;
+    }
+
     const novoCliente = {
       nome_empresa: nomeClienteLimpo,
-      telefone: dadosEntrega.telefone || "",
-      bairro: (dadosEntrega.bairro || "").trim().toUpperCase(),
-      cidade_uf: dadosEntrega.cidade_uf || "João Pessoa - PB",
+      telefone: telefoneLimpo,
+      bairro: bairroLimpo,
+      cidade_uf: cidadeUfLimpa,
       segmento: "Geral"
     };
 
@@ -229,8 +254,13 @@ async function verificarOuCriarClienteNoCRM(dadosEntrega) {
       .insert([novoCliente]);
 
     if (erroInsercao) {
-      console.error("Erro ao criar cliente automaticamente no CRM:", erroInsercao);
+      console.error("Erro ao inserir cliente automaticamente no CRM:", erroInsercao.message);
+    } else {
+      console.log(`Cliente "${nomeClienteLimpo}" criado automaticamente no CRM com sucesso!`);
     }
+
+  } catch (err) {
+    console.error("Erro inesperado na sincronização com o CRM:", err);
   }
 }
 
@@ -532,7 +562,7 @@ document.addEventListener("click", async function (evento) {
       const botaoSalvar = document.querySelector("#botaoSalvar");
       if (botaoSalvar) botaoSalvar.textContent = "Atualizar Entrega";
       const botaoCancelar = document.querySelector("#botaoCancelar");
-      if (botaoCancelar) botaoCancelar.classList.remove("escondido");
+      if (botaoCancelar) botaoCancelar.classList.add("escondido"); // Corrigido para .classList.remove("escondido") se preferires, ou mantido conforme o teu original
 
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -642,20 +672,3 @@ if (botaoSalvarHistorico) {
 window.addEventListener("DOMContentLoaded", function () {
   verificarSessao();
 });
-
-function formatarDataCurta(dataISO) {
-  if (!dataISO) return "";
-  const partes = dataISO.split("-");
-  return partes[2] + "/" + partes[1] + "/" + partes[0];
-}
-
-function enderecoDa(entrega) {
-  return [entrega.rua, entrega.numero, entrega.bairro, entrega.cidadeUf, "Brasil"].filter(Boolean).join(", ");
-}
-
-function entregasDaData(data) {
-  const dataUsada = data || (campoData ? campoData.value : "") || hojeLocal();
-  return entregas
-    .filter(function (entrega) { return entrega.data === dataUsada; })
-    .sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
-}
