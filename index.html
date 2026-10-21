@@ -228,5 +228,158 @@
   </script>
 
   <script src="script.js"></script>
+  <!-- SECÇÃO DE ALERTAS E PENDÊNCIAS OPERACIONAIS -->
+<div id="painel-alertas" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+  <h3 style="margin-top: 0; font-size: 16px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+    🔔 Central de Alertas Operacionais
+  </h3>
+  <div id="lista-alertas" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px;">
+    <!-- Os alertas são injetados dinamicamente aqui -->
+    <div style="background: #fff; padding: 12px; border-radius: 8px; border-left: 4px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <span style="font-size: 12px; color: #64748b; font-weight: bold;">ESTADO DO SISTEMA</span>
+      <p style="margin: 4px 0 0 0; font-size: 14px; color: #334155;">A carregar alertas operacionais...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Função para carregar e detetar pendências e urgências no Supabase
+  async function carregarAlertasOperacionais() {
+    try {
+      // Exemplo de consulta ao Supabase para buscar entregas pendentes ou urgentes
+      const { data: entregas, error } = await supabaseClient
+        .from('entregas')
+        .select('*')
+        .in('status', ['pendente', 'separacao']);
+
+      if (error) throw error;
+
+      const container = document.getElementById('lista-alertas');
+      container.innerHTML = '';
+
+      if (!entregas || entregas.length === 0) {
+        container.innerHTML = `
+          <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border-left: 4px solid #22c55e;">
+            <span style="font-size: 12px; color: #15803d; font-weight: bold;">TUDO EM ORDEM</span>
+            <p style="margin: 4px 0 0 0; font-size: 14px; color: #166534;">Nenhuma pendência crítica no momento.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Filtrar urgentes e atrasadas
+      const urgentes = entregas.filter(e => e.prioridade === 'urgente');
+      const hoje = new Date().toISOString().split('T')[0];
+      const atrasadas = entregas.filter(e => e.data_rota < hoje);
+
+      let htmlCards = '';
+
+      if (urgentes.length > 0) {
+        htmlCards += `
+          <div style="background: #fef2f2; padding: 12px; border-radius: 8px; border-left: 4px solid #ef4444; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <span style="font-size: 12px; color: #b91c1c; font-weight: bold;">🔥 ENTREGAS URGENTES</span>
+            <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: bold; color: #991b1b;">${urgentes.length} pedido(s)</p>
+            <span style="font-size: 11px; color: #7f1d1d;">Requer atenção imediata da equipa.</span>
+          </div>
+        `;
+      }
+
+      if (atrasadas.length > 0) {
+        htmlCards += `
+          <div style="background: #fffbeb; padding: 12px; border-radius: 8px; border-left: 4px solid #f59e0b; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <span style="font-size: 12px; color: #b45309; font-weight: bold;">⚠️ ENTREGAS ATRASADAS</span>
+            <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: bold; color: #92400e;">${atrasadas.length} rota(s)</p>
+            <span style="font-size: 11px; color: #78350f;">Data de rota anterior a hoje.</span>
+          </div>
+        `;
+      }
+
+      htmlCards += `
+        <div style="background: #eff6ff; padding: 12px; border-radius: 8px; border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <span style="font-size: 12px; color: #1d4ed8; font-weight: bold;">📦 TOTAL PENDENTE</span>
+          <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: bold; color: #1e40af;">${entregas.length} itens</p>
+          <span style="font-size: 11px; color: #1e3a8a;">Em aberto na fila de operações.</span>
+        </div>
+      `;
+
+      container.innerHTML = htmlCards;
+
+    } catch (err) {
+      console.error('Erro ao carregar alertas:', err);
+    }
+  }
+
+  // Executar ao carregar a página
+  window.addEventListener('DOMContentLoaded', carregarAlertasOperacionais);
+</script>
+
+<!-- SECÇÃO DE INDICADORES / DASHBOARD RÁPIDO -->
+<div id="painel-kpis" style="margin-bottom: 20px;">
+  <h3 style="font-size: 16px; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    📊 Indicadores de Desempenho (KPIs)
+  </h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+    
+    <!-- Cartão: Total de Entregas -->
+    <div style="background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <span style="font-size: 12px; color: #64748b; font-weight: bold;">TOTAL REGISTADAS</span>
+      <p id="kpi-total" style="margin: 6px 0 0 0; font-size: 22px; font-weight: bold; color: #0f172a;">0</p>
+    </div>
+
+    <!-- Cartão: Concluídas -->
+    <div style="background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <span style="font-size: 12px; color: #15803d; font-weight: bold;">CONCLUÍDAS</span>
+      <p id="kpi-concluidas" style="margin: 6px 0 0 0; font-size: 22px; font-weight: bold; color: #166534;">0</p>
+    </div>
+
+    <!-- Cartão: Pendentes / Em Rota -->
+    <div style="background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <span style="font-size: 12px; color: #b45309; font-weight: bold;">PENDENTES / EM ROTA</span>
+      <p id="kpi-pendentes" style="margin: 6px 0 0 0; font-size: 22px; font-weight: bold; color: #92400e;">0</p>
+    </div>
+
+    <!-- Cartão: Taxa de Conclusão -->
+    <div style="background: #fff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <span style="font-size: 12px; color: #1d4ed8; font-weight: bold;">TAXA DE SUCESSO</span>
+      <p id="kpi-taxa" style="margin: 6px 0 0 0; font-size: 22px; font-weight: bold; color: #1e40af;">0%</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Função para calcular e renderizar os KPIs operacionais a partir do Supabase
+  async function carregarIndicadoresWeb() {
+    try {
+      const { data: entregas, error } = await supabaseClient
+        .from('entregas')
+        .select('*');
+
+      if (error) throw error;
+
+      if (!entregas || entregas.length === 0) return;
+
+      const total = entregas.length;
+      const concluidas = entregas.filter(e => e.status === 'concluido').length;
+      const pendentes = entregas.filter(e => ['pendente', 'separacao', 'rota'].includes(e.status)).length;
+      
+      // Cálculo da taxa de conclusão
+      const taxaConclusao = total > 0 ? ((concluidas / total) * 100).toFixed(1) : 0;
+
+      // Atualizar os elementos no DOM
+      document.getElementById('kpi-total').textContent = total;
+      document.getElementById('kpi-concluidas').textContent = concluidas;
+      document.getElementById('kpi-pendentes').textContent = pendentes;
+      document.getElementById('kpi-taxa').textContent = taxaConclusao + '%';
+
+    } catch (err) {
+      console.error('Erro ao calcular indicadores:', err);
+    }
+  }
+
+  // Executar ao carregar a página
+  window.addEventListener('DOMContentLoaded', carregarIndicadoresWeb);
+</script>
+
 </body>
 </html>

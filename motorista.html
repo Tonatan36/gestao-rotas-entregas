@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LogiSync Pro - AçoForte (Motorista)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; padding: 16px; color: #1e293b; }
+    .header { background: #0f172a; color: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; text-align: center; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #3b82f6; }
+    .card.urgente { border-left-color: #ef4444; }
+    .btn { display: inline-block; background: #22c55e; color: #fff; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; margin-top: 8px; border: none; width: 100%; cursor: pointer; }
+    .btn-rota { background: #3b82f6; }
+  </style>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <div class="header">
+    <h2 style="margin:0; font-size: 18px;">🚛 AçoForte - Portal do Motorista</h2>
+    <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">LogiSync Pro Mobile</p>
+  </div>
+
+  <div id="lista-paradas">
+    <p style="text-align: center; color: #64748b;">A carregar as tuas entregas...</p>
+  </div>
+
+  <script>
+    // Inicialização do Supabase (usa as mesmas chaves do teu projeto)
+    const SUPABASE_URL = 'A_TUA_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'A_TUA_SUPABASE_ANON_KEY';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function carregarRotasMotorista() {
+      try {
+        const { data: entregas, error } = await supabaseClient
+          .from('entregas')
+          .select('*')
+          .in('status', ['pendente', 'separacao', 'rota'])
+          .order('data_rota', { ascending: true });
+
+        if (error) throw error;
+
+        const container = document.getElementById('lista-paradas');
+        container.innerHTML = '';
+
+        if (!entregas || entregas.length === 0) {
+          container.innerHTML = `<p style="text-align: center; color: #64748b;">Nenhuma entrega pendente para o momento.</p>`;
+          return;
+        }
+
+        entregas.forEach(entrega => {
+          const isUrgente = entrega.prioridade === 'urgente';
+          const card = document.createElement('div');
+          card.className = `card ${isUrgente ? 'urgente' : ''}`;
+          
+          card.innerHTML = `
+            <span style="font-size: 11px; font-weight: bold; color: ${isUrgente ? '#b91c1c' : '#3b82f6'};">
+              ${isUrgente ? '🔥 URGENTE' : '📦 ENTREGA'} | Rota: ${entrega.data_rota}
+            </span>
+            <h3 style="margin: 6px 0; font-size: 16px;">${entrega.cliente}</h3>
+            <p style="margin: 2px 0; font-size: 14px; color: #475569;">📍 ${entrega.rua}, ${entrega.numero} - ${entrega.bairro}</p>
+            <p style="margin: 2px 0 12px 0; font-size: 14px; color: #475569;">📞 Tel: ${entrega.telefone || 'Não informado'}</p>
+            
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-rota" onclick="atualizarStatus(${entrega.id}, 'rota')">Em Rota</button>
+              <button class="btn" onclick="atualizarStatus(${entrega.id}, 'concluido')">Concluir</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error('Erro ao carregar rotas mobile:', err);
+      }
+    }
+
+    async function atualizarStatus(id, novoStatus) {
+      const confirmar = confirm(`Deseja alterar o estado desta entrega para '${novoStatus} '?`);
+      if (!confirmar) return;
+
+      const { error } = await supabaseClient
+        .from('entregas')
+        .update({ status: novoStatus })
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao atualizar status: ' + error.message);
+      } else {
+        alert('Estado atualizado com sucesso!');
+        carregarRotasMotorista();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', carregarRotasMotorista);
+  </script>
+</body>
+</html>
