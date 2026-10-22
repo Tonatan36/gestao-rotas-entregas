@@ -1,9 +1,9 @@
 {
-  "name": "Gestão de Rotas de Entrega",
-  "short_name": "Rotas",
+  "name": "LogiSync Pro - AçoForte",
+  "short_name": "LogiSync Pro",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#0f172a",
   "theme_color": "#2563eb",
   "icons": [
     {

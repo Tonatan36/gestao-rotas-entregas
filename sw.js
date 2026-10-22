@@ -1,11 +1,30 @@
 self.addEventListener("install", function (evento) {
   evento.waitUntil(
-    caches.open("rotas-cache-v1").then(function (cache) {
+    caches.open("rotas-cache-v2").then(function (cache) {
       return cache.addAll([
         "./index.html",
+        "./clientes.html",
+        "./relatorio.html",
         "./style.css",
-        "./script.js"
+        "./script.js",
+        "./clientes.js",
+        "./manifest.json",
+        "./icon-192.png"
       ]);
+    })
+  );
+});
+
+self.addEventListener("activate", function (evento) {
+  evento.waitUntil(
+    caches.keys().then(function (keys) {
+      return Promise.all(
+        keys.map(function (key) {
+          if (key !== "rotas-cache-v2") {
+            return caches.delete(key);
+          }
+        })
+      );
     })
   );
 });
