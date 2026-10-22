@@ -562,7 +562,7 @@ document.addEventListener("click", async function (evento) {
       const botaoSalvar = document.querySelector("#botaoSalvar");
       if (botaoSalvar) botaoSalvar.textContent = "Atualizar Entrega";
       const botaoCancelar = document.querySelector("#botaoCancelar");
-      if (botaoCancelar) botaoCancelar.classList.add("escondido"); // Corrigido para .classList.remove("escondido") se preferires, ou mantido conforme o teu original
+      if (botaoCancelar) botaoCancelar.classList.add("escondido");
 
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

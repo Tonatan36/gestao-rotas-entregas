@@ -4,36 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AçoForte - Relatórios e BI</title>
+  <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
   <!-- Chart.js para gráficos interativos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase Client UMD -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body style="background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px;">
+<body style="background-color: #0f172a; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 20px; color: #f8fafc;">
 
-  <div class="app-container" style="max-width: 1200px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+  <div class="app-container" style="max-width: 1200px; margin: 0 auto; background: #1e293b; padding: 24px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
     
-    <!-- Cabeçalho -->
-    <header class="cabecalho-app" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px;">
-      <div>
-        <h1 style="margin: 0; color: #0f172a; font-size: 24px;">📊 AçoForte - Painel de BI & Relatórios</h1>
-        <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Indicadores de desempenho operacional e análise de entregas.</p>
+    <!-- Cabeçalho idêntico aos restantes módulos (Dark Mode) -->
+    <header class="cabecalho-app" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #334155; padding-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="icon-192.png" alt="AçoForte Logo" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;">
+        <div>
+          <h1 style="margin: 0; color: #fff; font-size: 20px;">📊 AçoForte - Painel de BI & Relatórios</h1>
+          <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px;">Indicadores de desempenho operacional e análise de entregas.</p>
+        </div>
       </div>
-      <a href="index.html" class="botao-pequeno" style="text-decoration: none; padding: 10px 18px; background-color: #334155; color: #fff; border-radius: 6px; font-weight: 600;">Voltar para a Rota</a>
+      <a href="index.html" class="botao-pequeno" style="text-decoration: none; padding: 8px 14px; background-color: #334155; color: #fff; border-radius: 6px; font-weight: 600; border: 1px solid #475569;">🚛 Voltar para a Rota</a>
     </header>
 
     <main class="conteudo-principal">
       
       <!-- Seção de Filtro por Período -->
-      <section style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <section style="background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 24px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <div>
-          <label for="dataInicio" style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Data Inicial:</label>
-          <input type="date" id="dataInicio" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+          <label for="dataInicio" style="font-size: 12px; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 4px;">Data Inicial:</label>
+          <input type="date" id="dataInicio" style="padding: 8px; background: #1e293b; border: 1px solid #475569; border-radius: 6px; color: #fff;">
         </div>
         <div>
-          <label for="dataFim" style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Data Final:</label>
-          <input type="date" id="dataFim" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+          <label for="dataFim" style="font-size: 12px; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 4px;">Data Final:</label>
+          <input type="date" id="dataFim" style="padding: 8px; background: #1e293b; border: 1px solid #475569; border-radius: 6px; color: #fff;">
         </div>
         <div style="align-self: flex-end;">
           <button type="button" id="botaoFiltrar" class="botao-pequeno" style="background-color: #2563eb; color: #fff; border: none; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Filtrar Período</button>
@@ -44,40 +48,40 @@
       <section style="margin-bottom: 30px;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
           
-          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-            <span id="kpiTotal" style="font-size: 28px; font-weight: bold; color: #0f172a; display: block;">0</span>
-            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Total de Entregas</span>
+          <div style="background: #0f172a; padding: 18px; border-radius: 8px; border: 1px solid #334155; text-align: center;">
+            <span id="kpiTotal" style="font-size: 28px; font-weight: bold; color: #fff; display: block;">0</span>
+            <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Total de Entregas</span>
           </div>
 
-          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-            <span id="kpiTaxa" style="font-size: 28px; font-weight: bold; color: #10b981; display: block;">0%</span>
-            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Taxa de Conclusão</span>
+          <div style="background: #0f172a; padding: 18px; border-radius: 8px; border: 1px solid #334155; text-align: center;">
+            <span id="kpiTaxa" style="font-size: 28px; font-weight: bold; color: #4ade80; display: block;">0%</span>
+            <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Taxa de Conclusão</span>
           </div>
 
-          <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center;">
-            <span id="kpiBairroTop" style="font-size: 20px; font-weight: bold; color: #3b82f6; display: block; margin-top: 4px;">-</span>
-            <span style="font-size: 13px; color: #64748b; font-weight: 600;">Bairro com Mais Entregas</span>
+          <div style="background: #0f172a; padding: 18px; border-radius: 8px; border: 1px solid #334155; text-align: center;">
+            <span id="kpiBairroTop" style="font-size: 18px; font-weight: bold; color: #60a5fa; display: block; margin-top: 4px;">-</span>
+            <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Bairro com Mais Entregas</span>
           </div>
 
         </div>
       </section>
 
-      <!-- Seção de Gráficos Nativos (Chart.js) -->
+      <!-- Seção de Gráficos Nativos (Chart.js com tema escuro ajustado) -->
       <section style="margin-bottom: 30px;">
-        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 15px;">Métricas Visuais</h2>
+        <h2 style="color: #fff; font-size: 16px; margin-bottom: 15px;">Métricas Visuais</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
           
           <!-- Gráfico de Rosca: Status das Entregas -->
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <h3 style="font-size: 14px; color: #475569; margin-top: 0; text-align: center;">Status das Entregas</h3>
+          <div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
+            <h3 style="font-size: 14px; color: #cbd5e1; margin-top: 0; text-align: center;">Status das Entregas</h3>
             <div style="position: relative; height: 220px; display: flex; justify-content: center;">
               <canvas id="graficoStatus"></canvas>
             </div>
           </div>
 
           <!-- Gráfico de Barras: Distribuição por Prioridade -->
-          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-            <h3 style="font-size: 14px; color: #475569; margin-top: 0; text-align: center;">Distribuição por Prioridade</h3>
+          <div style="background: #0f172a; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
+            <h3 style="font-size: 14px; color: #cbd5e1; margin-top: 0; text-align: center;">Distribuição por Prioridade</h3>
             <div style="position: relative; height: 220px; display: flex; justify-content: center;">
               <canvas id="graficoPrioridade"></canvas>
             </div>
@@ -88,12 +92,12 @@
 
       <!-- Seção do Power BI Incorporado -->
       <section class="secao-lista">
-        <h2 style="color: #1e293b; font-size: 18px; margin-bottom: 10px;">Dashboard Avançado (Power BI)</h2>
-        <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Acompanhe o painel analítico completo conectado ao banco de dados.</p>
+        <h2 style="color: #fff; font-size: 16px; margin-bottom: 6px;">Dashboard Avançado (Power BI)</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Acompanhe o painel analítico completo conectado ao banco de dados.</p>
         
-        <div style="width: 100%; height: 550px; border-radius: 8px; overflow: hidden; border: 1px solid #cbd5e1; background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
-          <div style="text-align: center; color: #64748b; padding: 20px;">
-            <p style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Dashboard do Power BI conectado</p>
+        <div style="width: 100%; height: 550px; border-radius: 8px; overflow: hidden; border: 1px solid #334155; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+          <div style="text-align: center; color: #94a3b8; padding: 20px;">
+            <p style="font-size: 15px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">Dashboard do Power BI conectado</p>
             <p style="font-size: 13px; margin: 0;">Insira o link de incorporação no atributo <code>src</code> do iframe quando necessário.</p>
           </div>
         </div>
@@ -130,7 +134,7 @@
     const inputInicio = document.querySelector("#dataInicio");
     const inputFim = document.querySelector("#dataFim");
     const hoje = hojeLocal();
-    if (inputInicio) inputInicio.value = hoje.substring(0, 8) + "01"; // Início do mês
+    if (inputInicio) inputInicio.value = hoje.substring(0, 8) + "01";
     if (inputFim) inputFim.value = hoje;
 
     async function carregarDadosParaGraficos(dataIni, dataFin) {
@@ -182,6 +186,10 @@
       // Destruir gráficos anteriores se existirem
       if (chartStatusInstance) chartStatusInstance.destroy();
       if (chartPrioridadeInstance) chartPrioridadeInstance.destroy();
+
+      // Configurações globais dos gráficos para combinar com o tema escuro
+      Chart.defaults.color = "#94a3b8";
+      Chart.defaults.borderColor = "#334155";
 
       // Renderizar Gráfico de Rosca (Status)
       const ctxStatus = document.getElementById("graficoStatus").getContext("2d");
